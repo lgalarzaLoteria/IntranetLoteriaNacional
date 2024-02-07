@@ -1,0 +1,20 @@
+﻿@page "/Home/Home"
+@using Blazored.LocalStorage
+@using Syncfusion.Blazor.Navigations
+@inject ILocalStorageService _session
+<div class="art">
+    <h1 style="color: var(--ph-skyblue)">Intranet de Lotería Nacional</h1>
+</div>
+
+@code
+{
+    //private string nombreUsuario = "";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //nombreUsuario = await _session.GetItemAsync<string>("nombreUsuario");//obtener ID rol de la session
+            StateHasChanged();
+        }
+    }
+}

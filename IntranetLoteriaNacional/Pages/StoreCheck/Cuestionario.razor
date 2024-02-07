@@ -1,0 +1,263 @@
+﻿@page "/StoreCheck/Cuestionario"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+
+<article class="art">
+    <h1 class="tituloPagina">Cuestionario</h1>
+    <div class="input-group" style="width: 45%;">
+        <PhButton Type="ButtonType.Primary" @onclick="()=>modalConfirmacion.showModalConfirm()" Size="ButtonSize.Medium" Text="Guardar" />
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-sm-6" style="left:auto">
+            <label for="det" class="col-sm-6 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Pregunta</label>
+        </div>
+        <div class="col-sm-6" style="text-align:right">
+            @* <label for="det" class="col-sm-2 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Respuesta</label> *@
+            <label for="det" class="col-sm-10 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">MARQUE CON X - SI CUMPLE / VACIA - NO CUMPLE</label>
+        </div>
+    </div>
+    <ul class="nav flex-column">
+        @if (Data != null)
+        {
+            @foreach (var seccion in Data)
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link">
+                        <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
+                        @{string nombrePanel = "nav" + seccion.nombreSeccion;}
+                         <table class="table">
+                                    <tbody>
+                                        @{
+                                            int count = 0;
+                                        }
+                                        @if (preguntasList != null)
+                                        {
+                                            string nombreGrupo = "nombreGrupo" + count.ToString();
+                                            foreach (var pregunta in preguntasList.Where(pl=>pl.codigoSeccion==seccion.codigoSeccion))
+                                            {
+                                                <tr name="nombreGrupo">
+                                                    @* <td style="visibility:collapse">@pregunta.codigoPregunta.ToString()</td> *@
+                                                    <td>@pregunta.descripcionPregunta.Trim()</td>
+                                                    <td>
+                                                        <input style="align-content:center" type="checkbox" @bind-value="pregunta.repuestaPregunta" /> 
+                                                    </td>
+                                                </tr>
+                                                count++;
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                    </NavLink>
+                </li>
+            }
+        }
+    </ul>
+    <div>
+        <PhConfirmacion @ref="modalConfirmacion" onClickCancel="CancelConfirm" title="Confirmación" content="¿Está seguro de guardar el cuestionario?" OnClickExec="sendData">
+        </PhConfirmacion>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+@code {
+    Loading loader { get; set; } = new();
+    IEnumerable<SeccionesDTO> Data;
+    SeccionesDTO dtSelectseccion = null;
+    SeccionesDTO secciones = new SeccionesDTO();
+    private PhConfirmacion modalConfirmacion { get; set; } = new();
+    private string EndPointSeccion { get; set; } = null!;
+    string mensajeTransaccion = string.Empty;
+    string iconoMostrar = string.Empty;
+    public IEnumerable<PreguntasDTO> preguntasList;
+    PreguntasDTO preguntasDTOForm = new PreguntasDTO();
+    PreguntasDTO SaveValue = new PreguntasDTO();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./StoreCheck/Cuestionario", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+            
+            await loader.Close();
+        }
+    }
+    protected async override void OnInitialized()
+    {
+        await CargarPreguntas();
+
+        EndPointSeccion = EndPoints.listarSecciones;
+
+        try
+        {
+            var result = await _httpClient.PostAsJsonAsync<SeccionesDTO>
+                (EndPointSeccion, secciones);
+            if (result is not null)
+            {
+                Data = result;
+                StateHasChanged();
+                await loader.Close();
+            }
+            else
+            {
+                mensajeTransaccion = "Error al comunicarse con el servicio";
+                iconoMostrar = "error";
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = iconoMostrar
+                    });
+            }
+        }
+        catch (Exception e)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = e.Message.ToString(),
+                    Icon = "error"
+                });
+            await loader.Close();
+        }
+    }
+    public async Task ValueChange(SeccionesDTO? item)
+    {
+        if(item!=null)
+        {
+            dtSelectseccion = item;
+            dtSelectseccion.equipoTransaccion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+            dtSelectseccion.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            //CargarPreguntas(item);
+        }
+    }
+    private async Task CargarPreguntas()
+    {
+        preguntasList = await _httpClient.PostAsJsonAsync<PreguntasDTO>(EndPoints.cargarPreguntasSeccion, secciones);
+        if (preguntasList == null)
+        {
+            mensajeTransaccion = "No existen preguntas relacionadas a la sección seleccionada, por favor comuníquese con el administrador";
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                 {
+                     ConfirmButtonColor = "var(--ph-skyblue)",
+                     Title = "Intranet Lotería Nacional",
+                     Text = mensajeTransaccion,
+                     Icon = "info"
+                 });
+        }
+
+    }
+    private async Task sendData()
+    {
+        await loader.Show();
+        string mensajeTransaccion = string.Empty;
+        string iconoMostrar = string.Empty;
+        try
+        {
+            RegistroDTO listaEnviar = new RegistroDTO();
+
+            List<RegistroFormularioDTO> registro = new List<RegistroFormularioDTO>();
+            foreach (var item in preguntasList)
+            {
+                RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                if (item.repuestaPregunta == null)
+                    item.repuestaPregunta = false;
+
+                datoEnviar.codigoRegistro = 0;
+                datoEnviar.codigoFormulario = 0;
+                datoEnviar.codigoPDS = 0;
+                datoEnviar.codigoComisionista = "obazurto";//await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.codigoSeccion = item.codigoSeccion;
+                datoEnviar.codigoPregunta = item.codigoPregunta;
+                datoEnviar.respuesta = item.repuestaPregunta;
+                datoEnviar.fechaRegistro = DateTime.Now.ToString("yyyy-MM-dd"); 
+                datoEnviar.equipoCreacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+                datoEnviar.usuarioCreacion = await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.fechaCreacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt")); 
+
+                registro.Add(datoEnviar);
+            }
+
+            listaEnviar.registro = registro;
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarCuestionario)
+                {
+                    Content = JsonContent.Create(listaEnviar)
+                };
+
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await loader.Close();
+            }
+            else
+            {
+                //await modalNotification.ErrorModal("Error de servicio");
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await loader.Close();
+            }
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+            //this.OnInitialized();
+        }
+        catch (HttpRequestException e)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = e.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
+    private async Task CancelConfirm()
+    {
+        //this.OnInitialized();
+        StateHasChanged();
+    }
+
+}

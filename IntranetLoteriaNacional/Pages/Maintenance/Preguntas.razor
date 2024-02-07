@@ -1,0 +1,342 @@
+﻿@page "/Maintenance/Preguntas"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject ProjectHttpClient _httpClient
+@inject SweetAlertService Swal
+
+<article class="art">
+    <h1 class="tituloPagina">Preguntas</h1>
+    <div class="input-group" style="width: 45%; ">
+        <Combo TItem="SeccionesDTO" text="nombreSeccion" Data="Data" Identifier="comboModSeccion" placeholder="Seleccione la sección" selectValue="dtSelectseccion" value="codigoSeccion" ValueChanged="ValueChange">
+        </Combo>
+    </div>
+    <br />
+    <div class="input-group" style="width: 45%;">
+        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+    </div>
+    <br />
+    <PhTable @ref="_table" TPost="PreguntasDTO" isRefresh="true" TReturn="PreguntasDTO" Body="@pregunta" EndPoint="@EndPointPregunta"
+             SearchDefinition="@(new[]
+                 {
+         "descripcionPregunta",
+         "descripcionEstadoPregunta",
+         "vigenciaDesde",
+         "vigenciaHasta"
+         })">
+        <PhTableColumnHeaders>
+            <PhTableColumn Style="width:30%;" Value="Descripción de la pregunta" IsHeader="true" />
+            <PhTableColumn Style="width:20%;" Value="Vigente desde" IsHeader="true" />
+            <PhTableColumn Style="width:20%;" Value="Vigente hasta" IsHeader="true" />
+            <PhTableColumn Style="width:20%;" Value="Estado de la pregunta" IsHeader="true" />
+        </PhTableColumnHeaders>
+        <PhTableColumnValues>
+            <PhTableColumn Value="@context.descripcionPregunta" Style="width:40%;" />
+            <PhTableColumn Value="@context.vigenciaDesde?.ToString("yyyy-MM-dd")" Style="width:20%;" />
+            <PhTableColumn Value="@context.vigenciaHasta?.ToString("yyyy-MM-dd")" Style="width:20%;" />
+            @if (context.estadoPregunta == true)
+            {
+                <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="Activo" />
+            }
+            else
+            {
+                <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="Inactivo" />
+            }
+        </PhTableColumnValues>
+        <PhTableActions>
+            <PhButton Type="ButtonType.Primary" OnClick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
+        </PhTableActions>
+    </PhTable>
+    <PhNotification @ref="@modalNotification">
+    </PhNotification>
+    <PhModal @ref="modalPregunta">
+        <Title>Preguntas</Title>
+        <Body>
+            <EditForm Model="preguntaDTOForm">
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Pregunta</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="preguntaDTOForm.descripcionPregunta" placeholder="Ingrese la pregunta">
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Vigente desde</label>
+                    <div class="col-sm-10">
+                        <input type="date" id="fechaVigencia" @bind-value="@vigenciaDesde" class="form-control rounded" pattern="\d{4}/\d{2}/\d{2}" Placeholder="Seleccione fecha" />
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Vigente hasta</label>
+                    <div class="col-sm-10">
+                        <input type="date" id="fechaVigencia" @bind-value="@vigenciaHasta" class="form-control rounded" pattern="\d{4}/\d{2}/\d{2}" Placeholder="Seleccione fecha" />
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <div class="col-sm-2">
+                        <label for="chek" class="col-sm-2 col-form-label col-form-label-lg">Estado</label>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
+                            @if (preguntaDTOForm.estadoPregunta == true)
+                            {
+                                <input class="form-check-input" @bind-value="preguntaDTOForm.estadoPregunta" type="checkbox" checked id="checkFletch">
+                                <label class="form-check-label" for="checkFletch">Activo</label>
+
+                            }
+                            else
+                            {
+                                <input class="form-check-input" @bind-value="preguntaDTOForm.estadoPregunta" type="checkbox" id="checkFletch">
+                                <label class="form-check-label" for="checkFletch">Inactivo</label>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+
+            </EditForm>
+        </Body>
+        <Footer>
+            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="ButtonType.Danger" @onclick="() => modalPregunta.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+        </Footer>
+
+    </PhModal>
+
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+@code {
+    private DateTime? vigenciaDesde { get; set; }
+    private DateTime? vigenciaHasta { get; set; }
+    Loading loader { get; set; } = new();
+    IEnumerable<SeccionesDTO> Data;
+    SeccionesDTO dtSelectseccion = null;
+    SeccionesDTO secciones = new SeccionesDTO();
+    private PhNotification modalNotification { get; set; } = new();
+
+    public int? IDCatalog { get; set; }
+    private PhTable<PreguntasDTO, PreguntasDTO>? _table = new();
+    private PhModal? modalPregunta { get; set; } = new();
+    PreguntasDTO preguntaDTOForm = new PreguntasDTO();
+    PreguntasDTO pregunta { get; set; } = null!;
+    private string EndPointSeccion { get; set; } = null!;
+    private string EndPointPregunta { get; set; } = null!;
+    string mensajeTransaccion = string.Empty;
+    string iconoMostrar = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Maintenance/Preguntas", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+            await loader.Close();
+        }
+    }
+
+    protected async override void OnInitialized()
+    {
+        EndPointSeccion = EndPoints.listarSecciones;
+        EndPointPregunta = EndPoints.obtenerPreguntas;
+        try
+        {
+
+            var result = await _httpClient.PostAsJsonAsync<SeccionesDTO>
+                (EndPointSeccion, secciones);
+            if (result is not null)
+            {
+                Data = result;
+                StateHasChanged();
+                await loader.Close();
+            }
+            else
+            {
+                mensajeTransaccion = "Error al comunicarse con el servicio";
+                iconoMostrar = "error";
+                await modalPregunta.CloseModal();
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = iconoMostrar
+                    });
+            }
+
+        }
+        catch (Exception e)
+        {
+            mensajeTransaccion = e.Message.ToString();
+            iconoMostrar = "error";
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+            await loader.Close();
+        }
+    }
+
+    public async Task ValueChange(SeccionesDTO? item)
+    {
+        if(item!=null)
+        {
+            dtSelectseccion = item;
+            PreguntasDTO deta = new PreguntasDTO();
+            if (dtSelectseccion != null)
+            {
+                await loader.Show();
+                try
+                {
+                    deta.codigoSeccion = short.Parse(dtSelectseccion.codigoSeccion.ToString());
+                    deta.equipoTransaccion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+                    deta.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+                    preguntaDTOForm.codigoSeccion = deta.codigoSeccion;
+                    pregunta = deta;
+                    loadTable();
+                }
+                catch (Exception ex)
+                {
+
+                    deta = new PreguntasDTO();
+                    pregunta = deta;
+                    loadTable();
+                }
+
+            }
+            else
+            {
+                deta.codigoSeccion = 0;
+                deta.equipoTransaccion = "PC";
+                deta.usuarioTransaccion = "jucast";
+                pregunta = deta;
+                loadTable();
+                pregunta = null;
+            }
+        }
+        
+    }
+
+    private async Task New()
+    {
+        if (dtSelectseccion != null)
+        {
+            preguntaDTOForm = new PreguntasDTO();
+            preguntaDTOForm.codigoSeccion = pregunta.codigoSeccion;
+            preguntaDTOForm.estadoPregunta = true;
+            preguntaDTOForm.codigoPregunta = 0;
+            vigenciaDesde = System.DateTime.Now;
+            vigenciaHasta = System.DateTime.Now.AddDays(7);
+
+            await modalPregunta.NewModal();
+        }
+        else
+        {
+            //await modalNotification.ErrorModal("Seleccione un cátalogo");
+            mensajeTransaccion = "Seleccione un cátalogo";
+            iconoMostrar = "info";
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+        }
+    }
+
+    private async Task Update(PreguntasDTO preguntaDTO)
+    {
+        preguntaDTOForm = preguntaDTO;
+        preguntaDTOForm.codigoSeccion = pregunta.codigoSeccion;
+        vigenciaDesde = preguntaDTO.vigenciaDesde;
+        vigenciaHasta = preguntaDTO.vigenciaHasta;
+        preguntaDTOForm.usuarioTransaccion = pregunta.usuarioTransaccion;
+        preguntaDTOForm.equipoTransaccion = pregunta.equipoTransaccion;
+        //accion = Convert.ToInt32(IdentifyPaginas.ACCIONES.ACTUALIZAR);
+        await modalPregunta.UpdateModal();
+    }
+
+    private async void loadTable()
+    {
+        _table.Body = pregunta;
+        await _table!.GetDataAsync();
+        await loader.Close();
+    }
+
+    private async Task sendData()
+    {
+        await loader.Show();
+        try
+        {
+            preguntaDTOForm.vigenciaDesde = vigenciaDesde;
+            preguntaDTOForm.vigenciaHasta = vigenciaHasta;
+            preguntaDTOForm.equipoTransaccion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+            preguntaDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarPreguntas)
+                {
+                    Content = JsonContent.Create(preguntaDTOForm)
+                };
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    await _table!.GetDataAsync();
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await modalPregunta.CloseModal();
+                await loader.Close();
+            }
+            else
+            {
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await modalPregunta.CloseModal();
+                await loader.Close();
+            }
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+        }
+        catch (HttpRequestException e)
+        {
+            await modalNotification.ErrorModal("Error: " + e.Message);
+            await modalPregunta.CloseModal();
+            await loader.Close();
+        }
+    }
+
+
+}

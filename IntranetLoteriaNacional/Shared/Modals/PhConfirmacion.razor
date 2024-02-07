@@ -1,0 +1,52 @@
+﻿
+<div class="modal center" tabindex="-1" role="dialog" style="display: @(Show ? "block" : "none");z-index:999999999;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:var(--ph-skyblue)">@title</h5>
+            </div>
+            <div class="modal-body">
+                <p>@content </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="@executeTask">Confirmar</button>
+                <button type="button" class="btn btn-secondary" onclick="@executeCancelTask">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+@*data-dismiss="modal"*@
+@code {
+
+    [Parameter]
+    public string title { get; set; }
+
+    [Parameter]
+    public string content { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClickExec { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> onClickCancel { get; set; }
+
+    public bool Show = false;
+    public void showModalConfirm()
+    {
+        Show = true;
+        StateHasChanged();
+    }
+    private async Task executeTask()
+    {
+        this.Show = false;
+        StateHasChanged();
+        await OnClickExec.InvokeAsync();
+    }
+    private async Task executeCancelTask()
+    {
+        this.Show = false;
+        StateHasChanged();
+        await onClickCancel.InvokeAsync();
+    }
+
+}

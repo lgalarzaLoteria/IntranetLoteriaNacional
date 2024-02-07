@@ -1,0 +1,54 @@
+﻿@inherits LayoutComponentBase
+@* @using PharmaNutri.DTO; *@
+@* @inject NavigationManager _navigation *@
+
+<style>
+    .content {
+        height: calc(100vh - 130px);
+    }
+</style>
+
+@if (renderFinalize)
+{
+    <div class="page" style="overflow-y: hidden">
+        <main style="background-color:#021151">
+           <article class="content" style="background-color:#021151">
+                @Body
+            </article>
+
+            <div id="div__footer" style="text-align:center;background-color:var(--ph-skyblue)">
+                <span>
+                    Copyright © 2024 LOTERÍA NACIONAL. Todos los derechos reservados.
+                </span>
+            </div>
+        </main>
+    </div>
+
+}
+
+@code {
+    private bool renderFinalize = false;
+    protected async override void OnInitialized()
+    {
+        try
+        {
+            // var user = await _session.GetItemAsync<UsuarioDTO>("_login");
+            // if (user != null)
+            // {
+            //     renderFinalize = false;
+            //     _ = Task.Run(async () =>
+            //     {
+            //         _navigation.NavigateTo("Home/Home");
+            //     });
+            // }
+            // else
+            // {
+                 renderFinalize = true;
+            //     StateHasChanged();
+            // }
+        }
+        catch
+        {
+        }
+    }
+}

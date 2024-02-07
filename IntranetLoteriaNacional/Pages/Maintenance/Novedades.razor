@@ -1,0 +1,210 @@
+﻿@page "/Maintenance/Novedades"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject ProjectHttpClient _httpClient
+@inject SweetAlertService Swal
+
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<article class="art">
+    <h1 class="tituloPagina">Novedades</h1>
+    <div class="input-group" style="width: 45%;">
+        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+    </div>
+
+    <PhModal @ref="modalNovedad">
+        <Title>Novedad</Title>
+        <Body>
+            <EditForm Model="novedadDTOForm">
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Novedad</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="novedadDTOForm.descripcionNovedad" placeholder="Ingrese la descripción de la novedad">
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <div class="col-sm-2">
+                        <label for="chek" class="col-sm-2 col-form-label col-form-label-lg">Estado</label>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
+                            <input class="form-check-input" @bind-value="@novedadDTOForm.estadoNovedad" checked="@novedadDTOForm.estadoNovedad" type="checkbox" id="flexSwitchCheckChecked">
+                            @if (@novedadDTOForm.estadoNovedad == true)
+                            {
+                                <label class="form-check-label" for="flexSwitchCheckChecked">Activo</label>
+                            }
+                            else
+                            {
+                                <label class="form-check-label" for="flexSwitchCheckChecked">Inactivo</label>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </Body>
+        <Footer>
+            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="ButtonType.Danger" @onclick="() => modalNovedad.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+        </Footer>
+    </PhModal>
+    <div>
+        <br />
+        <PhTable @ref="_table" TPost="NovedadesDTO" isRefresh="true" TReturn="NovedadesDTO" Body="new NovedadesDTO()" EndPoint="@EndPointStr"
+                 SearchDefinition="@(new[]
+                 {
+                    "descripcionNovedad",
+                    "descripcionEstadoNovedad"
+                 })">
+            <PhTableColumnHeaders>
+                <PhTableColumn Style="width:40%;" Value="Descripción Novedad" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Estado de la Novedad" IsHeader="true" />
+            </PhTableColumnHeaders>
+            <PhTableColumnValues>
+                <PhTableColumn Value="@context.descripcionNovedad" Style="width:40%;" />
+                @if (context.estadoNovedad == true)
+                {
+                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoNovedad" />
+                }
+                else
+                {
+                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoNovedad" />
+                }
+            </PhTableColumnValues>
+            <PhTableActions>
+                <PhButton Type="ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
+                
+            </PhTableActions>
+
+        </PhTable>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+@code {
+    Loading loader { get; set; } = new();
+
+    private PhTable<NovedadesDTO, NovedadesDTO>? _table = new();
+    private PhModal? modalNovedad { get; set; } = new();
+    private PhNotification modalNotification { get; set; } = new();
+    NovedadesDTO novedadDTOForm = new NovedadesDTO();
+    NovedadesDTO novedadDTO { get; set; } = null!;
+    private string EndPointStr { get; set; } = null!;
+
+    protected override async void OnInitialized()
+    {
+        EndPointStr = EndPoints.obtenerNovedades;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Maintenance/Novedades", item))
+            {
+                _navigation.NavigateTo("/Home/Error");
+            }
+            await loader.Close();
+        }
+    }
+
+    private async Task New()
+    {
+        novedadDTOForm = new NovedadesDTO();
+        novedadDTOForm.estadoNovedad = true;
+        novedadDTOForm.codigoNovedad = 0;
+        //accion = Convert.ToInt32(IdentifyPaginas.ACCIONES.GRABAR);
+        await modalNovedad.NewModal();
+    }
+
+    private async Task sendData()
+    {
+        await loader.Show();
+        string mensajeTransaccion = string.Empty;
+        string iconoMostrar = string.Empty;
+
+        try
+        {
+            novedadDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            novedadDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarNovedades)
+                {
+                    Content = JsonContent.Create(novedadDTOForm)
+                };
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    await _table!.GetDataAsync();
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await modalNovedad.CloseModal();
+                await loader.Close();
+            }
+            else
+            {
+                //await modalNotification.ErrorModal("Error de servicio");
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await modalNovedad.CloseModal();
+                await loader.Close();
+            }
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+        }
+        catch (HttpRequestException e)
+        {
+            await modalNotification.ErrorModal(e.Message.ToString());
+            await modalNovedad.CloseModal();
+            await loader.Close();
+        }
+    }
+
+    private async Task Update(NovedadesDTO novedadDTO)
+    {
+        novedadDTOForm = novedadDTO;
+        await modalNovedad.UpdateModal();
+        StateHasChanged();
+    }
+
+}

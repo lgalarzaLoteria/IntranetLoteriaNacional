@@ -1,0 +1,95 @@
+﻿@if (ChildContent is not null)
+{
+
+    <th class="@Class" style="padding: 14px; @(Style);" scope="col">@ChildContent</th>
+}
+else
+{
+    @if (IsHeader)
+    {
+        <th class="@Class" style="padding: 14px; @(Style)" scope="col">@Value</th>
+    }
+    else
+    {
+        if (StatusColor is not null)
+        {
+            <td class="@Class" style="padding: 14px; @(Style)" scope="col">
+                <span style="background-color: @(StatusColor);color: white;border-radius: 5px;padding: 2px 10px 2px 10px;">
+                    @Value
+                </span>
+            </td>
+        }
+        else
+        {
+            @if (isRender)
+            {
+                <td class="@Class" style="padding: 14px; @(Style)" scope="col"> @html</td>
+            }
+            else
+            {
+                <td class="@Class" style="padding: 14px; @(Style)" scope="col"> @Value</td>
+            }
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string Value { get; set; } = null!;
+
+    [Parameter]
+    public bool isRender { get; set; } = false;
+
+
+    public RenderFragment html { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsHeader { get; set; }
+
+    [Parameter]
+    public string? StatusColor { get; set; }
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //if (firstRender)
+        //{
+        //    if (isRender)
+        //    {
+        //        await RenderHtml(Value);
+        //    }
+        //}
+        if (isRender)
+        {
+            await RenderHtml(Value);
+        }
+
+    }
+
+    public async Task RenderHtml(string render)
+    {
+
+        RenderFragment html = builder =>
+        {
+            builder.AddMarkupContent(0, render);
+        };
+        this.html = html;
+        StateHasChanged();
+    }
+    public void UpdateRowSource()
+    {
+        StateHasChanged();
+    }
+
+}
+

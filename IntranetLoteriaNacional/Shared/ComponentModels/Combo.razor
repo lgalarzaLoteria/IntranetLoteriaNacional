@@ -1,0 +1,74 @@
+﻿@namespace IntranetLoteriaNacional.Shared.ComponentModels
+@typeparam TItem
+@inject IJSRuntime JSRuntime
+
+<select class="form-control select2" id="@Identifier" style="height: 40px;width: 100% !important;" disabled="@isDisabled">
+    @if (Data != null)
+    {
+        <option value="0">@placeholder</option>
+        @foreach (var item in Data)
+        {
+            var itemValue = item.GetType().GetProperty(value)?.GetValue(item)?.ToString();
+            var itemText = item.GetType().GetProperty(text)?.GetValue(item)?.ToString();
+            var itemconcat = "";
+            if (concat1 != null)
+            {
+                itemconcat = "-" + item.GetType().GetProperty(concat1)?.GetValue(item)?.ToString();
+            }
+
+            if (itemValue != null && itemText != null)
+            {
+                <option value="@itemValue" selected="@( selectValue != null ? selectValue.Equals(item) ? true: false: false)">@itemText  @itemconcat</option>
+            }
+        }
+    }
+</select>
+
+@code {
+    [Parameter]
+    public TItem? selectValue { get; set; }
+
+    [Parameter]
+    public string value { get; set; }
+    [Parameter]
+    public bool? isDisabled { get; set; } = false;
+
+    [Parameter]
+    public string text { get; set; }
+    [Parameter]
+    public string concat1 { get; set; }
+
+    [Parameter]
+    public string placeholder { get; set; } = "Seleccione";
+
+    [Parameter]
+    public IEnumerable<TItem?> Data { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Identifier { get; set; } // Nuevo parámetro para identificar el componente
+
+    [JSInvokable]
+    public async Task HandleSelectionChange(string selectedValue)
+    {
+        selectValue = Data.FirstOrDefault(item => item.GetType().GetProperty(value)?.GetValue(item)?.ToString() == selectedValue);
+        await ValueChanged.InvokeAsync(selectValue);
+    }
+
+    public async Task reload()
+    {
+        await JSRuntime.InvokeVoidAsync("refreshSelect2", Identifier);
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeSelect2");
+            await JSRuntime.InvokeVoidAsync("addSelect2ChangeListener", DotNetObjectReference.Create(this), Identifier); // Pasar Identifier a la función JavaScript
+        }
+    }
+}

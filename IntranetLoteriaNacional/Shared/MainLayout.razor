@@ -1,0 +1,60 @@
+﻿@inherits LayoutComponentBase
+
+@using Blazored.LocalStorage
+@using Syncfusion.Blazor.Navigations
+
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+
+
+<PageTitle>Loteria Nacional</PageTitle>
+
+<div class="page" style="background-color:#021151">
+    <div class="sidebar" style="background-color:#021151">
+        <NavMenu />
+    </div>
+
+    <main style="background-color:#021151">
+        <div class="top-row px-4" style="background-color:#021151">
+           @*  <div class="col px-sd-4" style="background-color:#021151">
+                <div class="row-cols-2" style="background-color:#021151">
+                    <div class="col-4 align-content-center" style="background-color:#021151">
+                        <h1 style="text-align:left;font-size:medium; color: var(--ph-skyblue)"></h1>
+                    </div>
+                    <div class="col-4 align-content-center" style="background-color:#021151">
+                        <h1 style="text-align:left;font-size:medium; color: var(--ph-skyblue)">Bienvenido @nombreUsuario</h1>
+                    </div>
+                    <div class="col-4 align-content-center" style="background-color:#021151">
+                        <p style="text-align:left;font-size:medium; color: var(--ph-skyblue)">Sessión Actual @fechaHora</p>
+                    </div>
+                </div>
+            </div> *@
+            <a style="text-align:right; color: var(--ph-skyblue);background-color:#021151" target="_blank" @onclick=CerrarSesion>Cerrar Sesión</a>
+        </div>
+        <article class="content px-4" style="background-color:#021151">
+            @Body
+        </article>
+    </main>
+</div>
+@code
+{
+    private string nombreUsuario = "";
+    private string fechaHora = System.DateTime.Now.ToString();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            nombreUsuario = await _session.GetItemAsync<string>("nombreUsuario");
+            StateHasChanged();
+        }
+    }
+    private async Task CerrarSesion()
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            await _session.ClearAsync();
+            _navigation.NavigateTo("./login");
+        });
+    }
+}

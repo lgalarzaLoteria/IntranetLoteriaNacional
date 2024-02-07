@@ -1,0 +1,212 @@
+﻿@page "/Maintenance/Secciones"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject ProjectHttpClient _httpClient
+@inject SweetAlertService Swal
+
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<article class="art">
+    <h1 class="tituloPagina">Secciones</h1>
+    <div class="input-group" style="width: 45%;">
+        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+    </div>
+
+    <PhModal @ref="modalSeccion">
+        <Title>Novedad</Title>
+        <Body>
+            <EditForm Model="seccionDTOForm">
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Seccion</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="seccionDTOForm.nombreSeccion" placeholder="Ingrese el nombre de la sección">
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <div class="col-sm-2">
+                        <label for="chek" class="col-sm-2 col-form-label col-form-label-lg">Estado</label>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
+                            <input class="form-check-input" @bind-value="@seccionDTOForm.estadoSeccion" checked="@seccionDTOForm.estadoSeccion" type="checkbox" id="flexSwitchCheckChecked">
+                            @if (@seccionDTOForm.estadoSeccion == true)
+                            {
+                                <label class="form-check-label" for="flexSwitchCheckChecked">Activo</label>
+                            }
+                            else
+                            {
+                                <label class="form-check-label" for="flexSwitchCheckChecked">Inactivo</label>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </Body>
+        <Footer>
+            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="ButtonType.Danger" @onclick="() => modalSeccion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+        </Footer>
+    </PhModal>
+    <div>
+        <br />
+        <PhTable @ref="_table" TPost="SeccionesDTO" isRefresh="true" TReturn="SeccionesDTO" Body="new SeccionesDTO()" EndPoint="@EndPointStr"
+                 SearchDefinition="@(new[]
+                 {
+                    "nombreSeccion",
+                    "descripcionEstadoSeccion"
+                 })">
+            <PhTableColumnHeaders>
+                <PhTableColumn Style="width:40%;" Value="Nombre Sección" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Estado de la Sección" IsHeader="true" />
+            </PhTableColumnHeaders>
+            <PhTableColumnValues>
+                <PhTableColumn Value="@context.nombreSeccion" Style="width:40%;" />
+                @if (context.estadoSeccion == true)
+                {
+                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoSeccion" />
+                }
+                else
+                {
+                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoSeccion" />
+                }
+            </PhTableColumnValues>
+            <PhTableActions>
+                <PhButton Type="ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
+
+            </PhTableActions>
+
+        </PhTable>
+        <PhNotification @ref="@modalNotification">
+        </PhNotification>
+
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+@code {
+    Loading loader { get; set; } = new();
+
+    private PhTable<SeccionesDTO, SeccionesDTO>? _table = new();
+    private PhModal? modalSeccion { get; set; } = new();
+    private PhNotification modalNotification { get; set; } = new();
+    SeccionesDTO seccionDTOForm = new SeccionesDTO();
+    SeccionesDTO seccionDTO { get; set; } = null!;
+    private string EndPointStr { get; set; } = null!;
+
+    protected override async void OnInitialized()
+    {
+        EndPointStr = EndPoints.obtenerSecciones;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Maintenance/Secciones", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+            await loader.Close();
+        }
+    }
+
+    private async Task New()
+    {
+        seccionDTOForm = new SeccionesDTO();
+        seccionDTOForm.estadoSeccion = true;
+        seccionDTOForm.codigoSeccion = 0;
+        await modalSeccion.NewModal();
+    }
+
+    private async Task sendData()
+    {
+        await loader.Show();
+        string mensajeTransaccion = string.Empty;
+        string iconoMostrar = string.Empty;
+
+        try
+        {
+            seccionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            seccionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarSecciones)
+                {
+                    Content = JsonContent.Create(seccionDTOForm)
+                };
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    await _table!.GetDataAsync();
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await modalSeccion.CloseModal();
+                await loader.Close();
+            }
+            else
+            {
+                //await modalNotification.ErrorModal("Error de servicio");
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await modalSeccion.CloseModal();
+                await loader.Close();
+            }
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+        }
+        catch (HttpRequestException e)
+        {
+            await modalNotification.ErrorModal(e.Message.ToString());
+            await modalSeccion.CloseModal();
+            await loader.Close();
+        }
+    }
+
+    private async Task Update(SeccionesDTO seccionDTO)
+    {
+        seccionDTOForm = seccionDTO;
+        await modalSeccion.UpdateModal();
+        StateHasChanged();
+    }
+
+}

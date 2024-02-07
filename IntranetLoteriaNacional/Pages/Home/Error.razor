@@ -1,0 +1,36 @@
+﻿@page "/Home/Error"
+@page "/Home/Error/{page}"
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@inject NavigationManager NavigationManager
+<div class="art">
+    @if (page is not null && page != "")
+    {
+        <h1 style="color: red">No posee permisos de consulta en la pagina @getpage()</h1>
+    }
+    else
+    {
+        <h1 style="color: red">No tiene permisos a esta pagina, solicite permisos al administrador</h1>
+    }
+
+</div>
+<Loading @ref="loader"></Loading>
+@code
+{
+    [Parameter]
+    public string page { get; set; } = null!;
+    Loading loader { get; set; } = new();
+    public string getpage()
+    {
+
+        return page;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await loader.Close();
+    }
+
+}
+@*<h1 style="color: red">No tiene permisos a esta pagina, solicite permisos al administrador</h1>*@
+
+

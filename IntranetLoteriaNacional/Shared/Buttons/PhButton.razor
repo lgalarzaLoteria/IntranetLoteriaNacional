@@ -1,0 +1,234 @@
+﻿@using IntranetLoteriaNacional.Shared.Buttons.Enums
+
+<style>
+    .btn-primary {
+        color: #fff;
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .btn-success {
+        color: #fff;
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .btn-danger {
+        color: #fff;
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .btn-primary:hover {
+        color: white;
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .btn-success:hover {
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .btn-danger:hover {
+        background-color: var(--ph-skyblue);
+        border-color: var(--ph-skyblue);
+    }
+
+    .center {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>
+
+@if (@isConfirmation)
+{
+
+    @if (Text is not null)
+    {
+        if (isShow)
+        {
+            <button style="font-size: medium; @Css" type="button" title="@title" onclick="@showModalConfirm" class="@_class @Class ">
+                @if (Icon is not null)
+                {
+                    <i class="@Icon">&nbsp;@Text</i>
+                }
+                else
+                {
+                    @Text
+                }
+            </button>
+        }
+
+    }
+    else if (ChildContent is not null)
+    {
+        if (isShow)
+        {
+            <button type="button" style="font-size: medium ; @Css" title="@title" onclick="@OnClick" class="@_class @Class">
+                @if (Icon is not null)
+                {
+                    <i class="Icon">&nbsp;@ChildContent</i>
+                }
+                else
+                {
+                    @ChildContent
+                }
+            </button>
+        }
+
+    }
+}
+else
+{
+    @if (Text is not null)
+    {
+        @if (isShow)
+        {
+            <button style="font-size: medium; @Css" type="button" title="@title" onclick="@OnClick" class="@_class @Class ">
+
+                @if (Icon is not null)
+                {
+                    <i class="@Icon">&nbsp;@Text</i>
+                }
+                else
+                {
+                    @Text
+                }
+            </button>
+        }
+
+    }
+    else if (ChildContent is not null)
+    {
+        @if (isShow)
+        {
+            <button type="button" style="font-size: medium; @Css" title="@title" onclick="@OnClick" class="@_class @Class">
+
+                @if (Icon is not null)
+                {
+                    <i class="Icon">&nbsp;@ChildContent</i>
+                }
+                else
+                {
+                    @ChildContent
+                }
+            </button>
+        }
+
+    }
+}
+<div class="modal center" tabindex="-1" role="dialog" style="display: @(Show ? "block" : "none");margin-top: 25vh">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="color:black;">
+            <div class="modal-header" >
+                <h5 class="modal-title">Confirmación</h5>
+            </div>
+            <div class="modal-body">
+                <p >¿Está seguro que desea procesar la transacción? </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="@executeTask">Confirmar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="@(() => this.Show = false)">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public ButtonSize Size { get; set; } = ButtonSize.Medium;
+    [Parameter]
+    public ButtonType Type { get; set; } = ButtonType.Primary;
+    [Parameter]
+    public string Text { get; set; } = null!;
+    [Parameter]
+    public string title { get; set; } = "";
+    [Parameter]
+    public string Class { get; set; } = null!;
+    [Parameter]
+    public bool isShow { get; set; } = true;
+    [Parameter]
+    public string Css { get; set; } = "";
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public bool isConfirmation { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private string _class { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        SetType();
+        SetSize();
+    }
+
+    private void SetType()
+    {
+        switch (Type)
+        {
+            case ButtonType.Primary:
+                _class += "btn btn-primary ";
+                break;
+            case ButtonType.Success:
+                _class += "btn btn-success ";
+                break;
+            case ButtonType.Danger:
+                _class += "btn btn-danger ";
+                break;
+            case ButtonType.Secondary:
+                _class += "btn btn-secondary ";
+                break;
+        }
+    }
+
+    private void SetSize()
+    {
+        switch (Size)
+        {
+            case ButtonSize.Small:
+                _class += "btn-sm ";
+                break;
+            case ButtonSize.Medium:
+                _class += "btn-md ";
+                break;
+            case ButtonSize.Large:
+                _class += "btn-lg ";
+                break;
+        }
+    }
+    public bool Show = false;
+    private void showModalConfirm()
+    {
+        Show = true;
+        StateHasChanged();
+        //Show = false;
+    }
+    private async Task executeTask()
+    {
+        this.Show = false;
+        await OnClick.InvokeAsync();
+    }
+
+    public async Task changeCssClassBtnSecondary()
+    {
+        _class = "btn btn-secondary ";
+        SetSize();
+        StateHasChanged();
+    }
+    public async Task changeCssClassBtnPrimary()
+    {
+        _class = "btn btn-primary ";
+        SetSize();
+        StateHasChanged();
+    }
+}

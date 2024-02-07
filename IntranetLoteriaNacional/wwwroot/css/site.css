@@ -1,0 +1,947 @@
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+@font-face {
+    font-family: avenir;
+    font-size: 0.9em;
+    font-weight: 100;
+    src: local('Avenir'),url(https://fonts.cdnfonts.com/s/71748/avenir_roman_12.woff) format('woff')
+}
+.gray-background {
+    background-color: #f2f2f2; /* Color gris de fondo */
+}
+@keyframes arrive {
+    from {
+        opacity: 0.0;
+    }
+
+    to {
+        opacity: 1.0;
+    }
+}
+
+.excel {
+    background-color: var(--ph-green);
+    border: 0;
+}
+
+    .excel:hover {
+        background-color: forestgreen;
+    }
+
+.pdf {
+    background-color: red;
+    border: 0;
+}
+
+    .pdf:hover {
+        background-color: darkred;
+    }
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ph-grey);
+    border-radius: 3px;
+}
+
+html, body, main {
+    height: 100%;
+    font-family: avenir;
+    /*overflow-x: hidden;*/
+    background-color: gray;
+}
+
+.page {
+    height: 110vh
+}
+
+.content {
+    height: 100%;
+}
+
+#div__footer {
+    z-index: 99999;
+    background-color: var(--ph-blue);
+    padding: 20px;
+    color: white;
+    font-size: 10px;
+    font-family: monospace;
+    bottom: 0;
+    width: 100%;
+    position: fixed;
+    display: block;
+}
+
+h1, h2, h3 {
+    margin-top: 2%;
+    margin-bottom: 4%;
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    line-height: 18px;
+    color: #EA0029;
+}
+
+h1:focus {
+    outline: none;
+}
+
+a, .btn-link {
+    color: #0071c1;
+}
+
+.modal-dialog {
+    box-shadow: 0px 0px 11px 1px #4e4e4e;
+    border-radius: 5px;
+}
+
+/************************** Diseño general **************************/
+.div__body {
+    margin-right: 5%;
+    margin-left: 5%;
+    height: 100%;
+}
+
+.div__body__content {
+    border-radius: 20px;
+    height: 90%;
+    /*overflow-y: scroll;
+    overflow-x: hidden;*/
+    overflow: auto;
+    /*overflow-x: auto;*/
+}
+
+.div__content {
+    margin-right: 4%;
+    margin-left: 4%;
+}
+._button {
+    transition-duration: 0.4s;
+    border: 0;
+    color: var(--ph-gray);
+}
+
+._button_Add {
+    transition-duration: 0.4s;
+    border: 0;
+    color: var(--ph-gray);
+    background-color: var(--ph-gray);
+    width: 50px;
+}
+
+    ._button_Add:hover {
+        background: var(--ph-blue);
+        color: white;
+    }
+
+
+
+._button:hover {
+    background-color: var(--ph-blue);
+    color: white;
+}
+
+/*************           ACCIONES            ***********/
+
+
+.div_btn_img button {
+    border-color: gray;
+    background: white;
+    border: 4px solid #E0E0E0;
+    border-radius: 20px;
+    color: #53565A;
+}
+.div_btn_img button img {
+    width: 30px;
+    height:30px;
+    float: initial;
+}
+
+/******************     ATRIBUTOS TABLA GENERAL **********************/
+
+/*tbody {*/
+    /*display: block;*/
+    /*height: 350px;*/
+    /*min-height: 50px;
+    max-height: 350px;*/
+    /*overflow: auto;*/
+/*}*/
+
+/*thead, tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;*/ /* even columns width , fix width of table too*/
+/*}*/
+
+/*thead {
+    width: calc( 100% - 1em )*/ /* scrollbar is average 1em/16px width, remove it from thead width */
+/*}*/
+/******************     ATRIBUTOS TABLA GENERAL **********************/
+
+/*************           ACCIONES            ***********/
+
+
+/*ESTILO DE BOTONES*/
+
+.btn_save {
+    background: #78BE20;
+    border-radius: 10px;
+    width: 300px;
+    height: 50px;
+    margin: 1%;
+    float: right;
+}
+.btn_save_Rol {
+    background: #78BE20;
+    border-radius: 10px;
+    width: 300px;
+    height: 50px;
+    margin: 4%;
+    float: left;
+}
+/*******************/
+.main {
+    margin: 5%;
+}
+
+/*Button style type app or web*/
+.type {
+    width: 250px;
+    height: 50px;
+    left: 875px;
+    top: 532px;
+    /* Gray 6 */
+    border: 0;
+    color: #53565A;
+    background: #F2F2F2;
+    border-radius: 10px;
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 18px;
+}
+/*+++++++++++++++++++++++++++++++*/
+
+.action {
+    left: 0%;
+    right: 0%;
+    top: 20%;
+    bottom: 0%;
+    /* Green */
+    background: #78BE20;
+    border-radius: 10px;
+    Width: 300px;
+    Height: 60px;
+}
+/*********************************************CHECK TOGLLE*/
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 20px;
+    left: 4px;
+}
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: gray;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 15px;
+        width: 22px;
+        left: 4px;
+        bottom: 8px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+input:checked + .slider {
+    background-color: green;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 0px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+   border-radius: 50%;
+}
+
+button img {
+    float: left;
+    background: none;
+    color: gray;
+}
+
+/************************* End Diseño general**************************/
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid red;
+}
+
+.validation-message {
+    color: red;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+    .blazor-error-boundary::after {
+        content: "An error has occurred."
+    }
+
+.art {
+    padding: 2% !important;
+    margin-top: 2%;
+    margin-bottom: 3% !important;
+    border-radius: 16px;
+    background-color: white
+}
+
+
+
+* {
+    box-sizing: border-box;
+}
+
+
+.courses-container {
+}
+
+.course {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    max-width: 100%;
+    margin: 1%;
+    overflow: hidden;
+    width: 98%;
+}
+
+    .course h6 {
+        text-align: left;
+        opacity: 0.6;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+
+    .course h2 {
+
+        text-align: left;
+        letter-spacing: 1px;
+        margin: 10px 0;
+    }
+
+.course-preview {
+    /*background: #F8F8F8;
+    border-radius: 10px;*/
+    color: white;
+    padding: 20px;
+    width: 100%;
+}
+
+    .course-preview a {
+        text-align: left;
+        color: #fff;
+        display: inline-block;
+        font-size: 12px;
+        opacity: 0.6;
+        margin-top: 30px;
+        text-decoration: none;
+    }
+
+.course-info {
+    text-align: left;
+    padding: 30px;
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
+
+
+
+
+
+.loader {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background: url('//upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Phi_fenomeni.gif/50px-Phi_fenomeni.gif') 50% 50% no-repeat rgb(249,249,249);
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/**************DASHOBOARD VALUES H*/
+.h1__cardh1 {
+    width: 80%;
+    margin-left: 8%;
+    font-family: 'Avenir Next';
+    font-style: normal;
+    font-size: 12px; /* or 417% */
+    display: flex;
+    height: 0;
+    align-items: center;
+    letter-spacing: 0.05em;
+    color: rgba(102, 112, 128, 0.8);
+}
+.div__lineborder {
+    width: 80%;
+    height: 0px;
+    margin-left: 10%;
+    border: 1px solid #E6EAEE;
+}
+
+.h1__tituser {
+    font-family: 'Avenir Next';
+    font-style: normal;
+    height: 0;
+    margin-top: 5%;
+    font-size: 14px; /* or 357% */
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    color: #262525;
+}
+.h2_tituser {
+    font-family: 'Avenir Next';
+    font-style: normal;
+    font-size: 15px; /* or 556% */
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    color: rgba(102, 112, 128, 0.8);
+}
+.h1_value_total {
+    font-family: 'Avenir Next';
+    font-style: normal;
+    font-size: 15px;
+    margin-top: 10%;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    letter-spacing: 0.05em;
+    color: #000B8C;
+}
+.h2_date_total {
+    font-family: 'Avenir Next';
+    font-style: normal;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    text-align: right;
+    letter-spacing: 0.05em;
+    color: #858D99;
+}
+    ¨
+/*Section totales grid 3*/
+
+.h1_total_ventas_title {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 25px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Blue */
+    color: #000B8C;
+}
+
+.h1_total_ventas_value {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 30px;
+    display: flex;
+    align-items: center; /* Blue */
+    color: #000B8C;
+}
+.h3_vencido_title {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Red */
+    color: #EA0029;
+}
+
+.h3_vencido_value {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Red */
+    color: #EA0029;
+}
+
+.h2_percent_vencido {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 50px;
+    line-height: 18px; /* or 36% */
+    display: flex;
+    align-items: center;
+    font-style: initial;
+    color: #EA0029;
+}
+
+
+.h3_novencido_title {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Red */
+    color: forestgreen;
+}
+
+.h3_novencido_value {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 28px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Red */
+    color: forestgreen;
+}
+
+.h2_nopercent_vencido {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 50px;
+    line-height: 18px; /* or 36% */
+    display: flex;
+    align-items: center;
+    font-style: initial;
+    color: forestgreen;
+}
+/**************************/
+.h3_state_cobros {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 25px;
+    line-height: 18px; /* or 72% */
+    display: flex;
+    align-items: center; /* Gray 2 */
+    color: #4F4F4F;
+}
+.h1_state_cobros {
+    font-family: 'Avenir';
+    font-style: normal;
+    margin-bottom: 10%;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Blue */
+    color: #000B8C;
+}
+.h3_state_cobros_value {
+    font-family: 'Avenir';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 18px;
+    display: flex;
+    align-items: center; /* Red */
+    color: gray;
+}
+.h5_state_cobros_ext {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px; /* or 150% */
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.02em;
+    color: rgba(102, 112, 128, 0.8);
+}
+.h5_state_cobros_ext_val {
+    font-family: 'Avenir Next';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 50px; /* or 208% */
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.02em; /* Green */
+    color: #78BE20;
+}
+.h5_state_cobros30Days {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px; /* or 150% */
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.02em;
+    color: rgba(102, 112, 128, 0.8);
+    margin-bottom: 7%;
+}
+/************************************DASHBOARD***********************************/
+
+
+.btn-primary-Tab {
+    color: black;
+    background-color: white;
+    border-color: #5bc2c2;
+    border-radius: 10px;
+}
+
+    .btn-primary-Tab:hover {
+        color: black !important;
+    }
+
+.btn-seconday-Tab {
+    color:white;
+    background: #00075E;
+    border-radius: 10px;
+}
+.btn-seconday-Tab:hover {
+    color: white!important;
+}
+.btn-tab:hover {
+    opacity: 0.7;
+}
+
+
+
+
+
+#states_phcolumn {
+}
+#img_responsive {
+    width: 50px;
+    height: 40px;
+}
+#img_responsive_logo {
+    width: 200px;
+    height: 50px;
+}
+#span_responsive_user{
+}
+#span_responsive_user_email {
+}
+/****RESPONSIVE TABLES BOOSTRAP***/
+@media only screen and (max-width: 760px), (min-device-width: 768px) and (max-device-width: 1024px) {
+    table, thead, tbody, th, td, tr {
+    }
+    thead {
+        font-size: 12px;
+        overflow-y: auto;
+    }
+
+    tbody
+    {
+        font-size: 12px;
+        overflow: auto;
+        height: 50px;
+    }
+    tbody tr td span {
+        padding: 2px 3px 2px 3px;
+        font-size: 3px;
+    }
+
+    #states_phcolumn {
+        font-size: 5px;
+        margin:0px; 
+    }
+
+    #img_responsive_logo {
+        width: 75px;
+        height: 25px;
+    }
+    #span_responsive_user {
+        font-size: 5px;
+        display: block;
+        margin-top: 10%;
+    }
+    #span_responsive_user_email {
+        font-size: 5px;
+    }
+    #img_responsive {
+        width: 20px;
+        height: 20px;
+    }
+    .tableFixHead {
+        max-height: 100px !important;
+    }
+    .h2_percent_vencido {
+        font-family: 'Avenir';
+        font-style: normal;
+        font-weight: 800;
+        font-size: 30px;
+        line-height: 18px; /* or 36% */
+        display: flex;
+        align-items: center;
+        font-style: initial;
+        color: #EA0029;
+    }
+    .h2_nopercent_vencido {
+        font-family: 'Avenir';
+        font-style: normal;
+        font-weight: 800;
+        font-size: 30px;
+        line-height: 18px; /* or 36% */
+        display: flex;
+        align-items: center;
+        font-style: initial;
+        color: forestgreen;
+    }
+    .h3_vencido_value {
+        font-family: 'Avenir';
+        font-style: normal;
+        font-weight: 500;
+        font-size: 20px;
+        line-height: 18px;
+        display: flex;
+        align-items: center; /* Red */
+        color: #EA0029;
+    }
+    .h3_novencido_title {
+        font-family: 'Avenir';
+        font-style: normal;
+        font-weight: 500;
+        font-size: 20px;
+        line-height: 18px;
+        display: flex;
+        align-items: center; /* Red */
+        color: forestgreen;
+    }
+    .h1__tituser {
+        font-family: 'Avenir Next';
+        font-style: normal;
+        height: 0;
+        margin-top: 8%;
+        font-size: 10px; /* or 357% */
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.05em;
+        color: #262525;
+    }
+}
+
+
+/**MODAL*/
+
+/*.modal-confirm {
+    color: #434e65;
+    width: 525px;
+}
+
+    .modal-confirm .modal-content {
+        padding: 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: none;
+    }
+
+    .modal-confirm .modal-header {
+        background-color: var(--ph-green);
+        border-bottom: none;
+        position: relative;
+        text-align: center;
+        margin: -20px -20px 0;
+        border-radius: 5px 5px 0 0;
+        padding: 35px;
+    }
+
+    .modal-confirm h4 {
+        text-align: center;
+        font-size: 36px;
+        margin: 10px 0;
+    }
+
+    .modal-confirm .form-control, .modal-confirm .btn {
+        min-height: 40px;
+        border-radius: 3px;
+    }
+
+    .modal-confirm .close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: #fff;
+        text-shadow: none;*/
+        /*opacity: 0.5;*/
+    /*}
+
+        .modal-confirm .close:hover {*/
+            /*opacity: 0.8;*/
+            /*background-color: var(--ph-red);
+        }
+
+    .modal-confirm .icon-box {
+        color: #fff;
+        width: 95px;
+        height: 95px;
+        display: inline-block;
+        border-radius: 50%;
+        z-index: 9;
+        border: 5px solid #fff;
+        padding: 15px;
+        text-align: center;
+    }
+
+        .modal-confirm .icon-box i {
+            font-size: 64px;
+            margin: -4px 0 0 -4px;
+        }
+
+    .modal-confirm.modal-dialog {
+        margin-top: 80px;
+    }
+
+    .modal-confirm .btn, .modal-confirm .btn:active {
+        color: #fff;
+        border-radius: 4px;*/
+        /*background: #eeb711 !important;*/
+        /*text-decoration: none;
+        transition: all 0.4s;
+        line-height: normal;
+        border-radius: 30px;*/
+        /*margin-top: 10px;*/
+        /*padding: 6px 20px;*/
+        /*border: none;*/
+    /*}
+
+        .modal-confirm .btn:hover, .modal-confirm .btn:focus {*/
+            /*background: #eda645 !important;*/
+            /*outline: none;
+            color: red;
+        }
+
+        .modal-confirm .btn span {
+            margin: 1px 3px 0;
+            float: left;
+        }
+
+        .modal-confirm .btn i {
+            margin-left: 1px;
+            font-size: 20px;
+            float: right;
+        }*/
+
+
+
+
+.tachado td {
+    position: relative;
+    background-color: #D2D2D2;
+}
+
+    .tachado td:before {
+        content: " ";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        /*border-bottom: 1px solid red;*/
+        width: 100%;
+    }
+
+.tituloPagina {
+    /*font-family: 'Avenir Next';
+    font-style: normal;
+    height: 0;
+    margin-top: 8%;
+    font-size: 10px;*/ /* or 357% */
+    /*display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;*/
+    color: var(--ph-skyblue);
+}
+
+.space {
+    width: 10px;
+    height: auto;
+    display: inline-block;
+}

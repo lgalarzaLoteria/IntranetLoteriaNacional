@@ -1,0 +1,230 @@
+﻿@page "/StoreCheck/Revision"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<article class="art">
+    <h1 class="tituloPagina">Resumen por PDS</h1>
+    <div>
+        <br />
+        <PhTable @ref="_table" TPost="LoginDTO" isRefresh="true" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor"
+                 SearchDefinition="@(new[]
+                 {
+                    "codigoZona",
+                    "nombreZona",
+                    "codigoPDS",
+                    "nombrePDS",
+                    "CuestionariosPendientes"
+                 })">
+            <PhTableColumnHeaders>
+                @* <PhTableColumn Style="width:0%;visibility:collapse" Value="Codigo Zona" IsHeader="true" /> *@
+                <PhTableColumn Style="width:30%;" Value="Nombre Zona" IsHeader="true" />
+                @* <PhTableColumn Style="width:0%;visibility:collapse" Value="Codigo PDS" IsHeader="true" /> *@
+                <PhTableColumn Style="width:50%;" Value="Nombre PDS" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Cuestionarios Pendientes" IsHeader="true" />
+            </PhTableColumnHeaders>
+            <PhTableColumnValues>
+                @* <PhTableColumn Value="@Convert.ToString(context.codigoZona)" Style="width:0%;visibility:collapse" /> *@
+                <PhTableColumn Value="@context.nombreZona" Style="width:30%;text-align:center;vertical-align:middle;" />
+                @* <PhTableColumn Value="@Convert.ToString(context.codigoPDS)" Style="width:0%;visibility:collapse" /> *@
+                <PhTableColumn Value="@context.nombrePDS" Style="width:50%;" />
+                <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
+            </PhTableColumnValues>
+            <PhTableActions>
+                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
+
+            </PhTableActions>
+
+        </PhTable>
+        <PhNotification @ref="@modalNotification">
+        </PhNotification>
+
+        <PhModal @ref="modalCuestionarios">
+            <Title>Cuestionarios Pendientes de Revisión</Title>
+            <Body>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">PDS</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombrePDS">
+                    </div>
+                </div>
+                <PhTable @ref="_table1" TPost="RegistroFormularioDTO" isRefresh="true" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios"
+                         SearchDefinition="@(new[]
+                         {
+                             "codigoFormulario",
+                             "fechaRegistro"
+                         })">
+                    <PhTableColumnHeaders>
+                        <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
+                        <PhTableColumn Style="width:20%;" Value="Fecha Registro" IsHeader="true" />
+                    </PhTableColumnHeaders>
+                    <PhTableColumnValues>
+                        <PhTableColumn Value="@Convert.ToString(context.codigoFormulario)" Style="width:20%;" />
+                        <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
+                    </PhTableColumnValues>
+                    <PhTableActions>
+                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                    </PhTableActions>
+                </PhTable>
+
+                <PhModal @ref="modalCuestionario">
+                    <Title>Cuestionario Ingresado</Title>
+                    <Body>
+                        <div class="form-group row" style="margin-bottom:2%;">
+                            <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Cuestionario #</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-lg" id="det" @bind-value="codigoFormulario">
+                            </div>
+                        </div>
+                    </Body>
+                    <Footer>
+                        <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    </Footer>
+                </PhModal>
+
+            </Body>
+            <Footer>
+                <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+            </Footer>
+        </PhModal>
+
+    </div>
+
+    <div>
+        <PhConfirmacion @ref="modalConfirmacion" onClickCancel="CancelConfirm" title="Confirmación" content="¿Está seguro de guardar el cuestionario?" OnClickExec="sendData">
+        </PhConfirmacion>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+@code {
+    Loading loader { get; set; } = new();
+    private PhTable<LoginDTO, ZonasPorSupervisorDTO>? _table = new();
+    private PhTable<RegistroFormularioDTO, FormulariosporPOSDTO>? _table1 = new();
+    private PhConfirmacion modalConfirmacion { get; set; } = new();
+    private PhNotification modalNotification { get; set; } = new();
+    private string EndPointStr { get; set; } = null!;
+    private string EndPointCuestionarios { get; set; } = null!;
+    private string EndPointFormularioIngresado { get; set; } = null!;
+    LoginDTO login { get; set; } = null!;
+    RegistroFormularioDTO pds { get; set; } = null!;
+    private PhModal? modalCuestionarios { get; set; } = new();
+    private PhModal? modalCuestionario { get; set; } = new();
+    private int codigoPDS { get; set; } = 0;
+    private string nombrePDS { get; set; } = string.Empty;
+    private long codigoFormulario { get; set; } = 0;
+
+
+    protected override async void OnInitialized()
+    {
+        EndPointStr = EndPoints.obtieneZonasPorSupervisor;
+        
+        try
+        {
+            login = new LoginDTO();
+            login.UserName = "fmorla";//await _session.GetItemAsync<string>("codigoUsuario");
+            var result = await _httpClient.PostAsJsonAsync<ZonasPorSupervisorDTO>
+               (EndPointStr, login);
+
+            _table.Data = result;
+        }
+        catch (Exception ex)
+        {
+
+            login = new LoginDTO();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./StoreCheck/Revision", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+        }
+    }
+
+    private async Task sendData()
+    {
+
+    }
+
+    private async Task VerCuestionarios(ZonasPorSupervisorDTO dato)
+    {
+        try
+        {
+            codigoPDS = int.Parse(dato.codigoPDS.ToString());
+            nombrePDS = dato.nombrePDS;
+            EndPointCuestionarios = EndPoints.consultarFormulariosporPOS;
+
+            var result = await _httpClient.PostAsJsonAsync<FormulariosporPOSDTO>
+               (EndPointCuestionarios, dato);
+
+            _table1.Data = result;
+            await modalCuestionarios.NewModal();
+        }
+        catch (Exception ex)
+        {
+
+            dato = new ZonasPorSupervisorDTO();
+        }
+    }
+
+    private async Task CancelConfirm()
+    {
+        //this.OnInitialized();
+        StateHasChanged();
+    }
+
+    private async Task VerFormulario(FormulariosporPOSDTO formulario)
+    {
+        try
+        {
+            codigoFormulario = long.Parse(formulario.codigoFormulario.ToString());
+            EndPointFormularioIngresado = EndPoints.consultarFormularioIngresado;
+
+            var result = await _httpClient.PostAsJsonAsync<RegistroFormularioDTO>
+               (EndPointFormularioIngresado, formulario);
+
+            //_table2.Data = result;
+            await modalCuestionario.NewModal();
+        }
+        catch (Exception ex)
+        {
+
+            formulario = new FormulariosporPOSDTO();
+        }
+    }
+}

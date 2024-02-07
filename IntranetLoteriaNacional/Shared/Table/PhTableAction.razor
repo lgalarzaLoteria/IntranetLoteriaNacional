@@ -1,0 +1,8 @@
+﻿<span style="cursor: pointer;font-size: 5px;" @onclick="OnClick">@Title</span>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = null!;
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+}

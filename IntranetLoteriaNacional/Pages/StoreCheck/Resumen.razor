@@ -1,0 +1,260 @@
+﻿@page "/StoreCheck/Resumen"
+
+@using System.Drawing
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Data
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using Syncfusion.Blazor.Charts
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+@inject StoreCheckService StoreService
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<article class="art">
+    <h1 class="tituloPagina">Resumen por Zona</h1>
+    <div>
+        <SfChart>
+            <ChartEvents OnAxisLabelClick="AxisLabelClickEvent"></ChartEvents>
+            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"></ChartPrimaryXAxis>
+            <ChartPrimaryYAxis Title="Cuestionarios con Novedades"></ChartPrimaryYAxis>
+            <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+            <ChartLegendSettings Visible="true"></ChartLegendSettings>
+            <ChartSeriesCollection>
+                <ChartSeries DataSource="@zonas" XName="Zona" YName="CuestionariosNovedades" Type="ChartSeriesType.Column" Fill="var(--ph-skyblue)">
+                    <ChartMarker>
+                        <ChartDataLabel Visible="true"></ChartDataLabel>
+                    </ChartMarker>
+                </ChartSeries>
+            </ChartSeriesCollection>
+        </SfChart>
+        <PhModal @ref="modalResumen">
+            <Title>Resumen por Supervisor</Title>
+            <Body>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Zona</label>
+                    <div class="col-sm-5">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombreZona">
+                    </div>
+                </div>
+                <PhTable @ref="_table1" TPost="ResumenGerencialZonasDTO" isSearcheable="false" isRefresh="false" TReturn="ResumenGerencialZonasDTO" Body="@supervisor" EndPoint="@EndPointStr">
+                    <PhTableColumnHeaders>
+                        <PhTableColumn Style="width:10%;" Value="Supervisor" IsHeader="true" />
+                        <PhTableColumn Style="width:30%;" Value="PDS" IsHeader="true" />
+                        <PhTableColumn Style="width:20%;" Value="Cuestionarios Novedades" IsHeader="true" />
+                    </PhTableColumnHeaders>
+                    <PhTableColumnValues>
+                        <PhTableColumn Value="@context.nombreSupervisor" Style="width:30%;" />
+                        <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
+                        <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
+                    </PhTableColumnValues>
+                    <PhTableActions>
+                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                    </PhTableActions>
+                </PhTable>
+                <PhModal @ref="modalCuestionarios">
+                    <Title>Cuestionarios con Novedades en PDS</Title>
+                    <Body>
+                        <div class="form-group row" style="margin-bottom:2%;">
+                            <label for="det" class="col-sm-2 col-form-label col-form-label-lg">PDS</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombrePDS">
+                            </div>
+                        </div>
+                        <PhTable @ref="_table2" TPost="RegistroFormularioDTO" isSearcheable="false" isRefresh="false" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios">
+                            <PhTableColumnHeaders>
+                                <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
+                                <PhTableColumn Style="width:20%;" Value="Fecha Registro" IsHeader="true" />
+                            </PhTableColumnHeaders>
+                            <PhTableColumnValues>
+                                <PhTableColumn Value="@Convert.ToString(context.codigoFormulario)" Style="width:20%;" />
+                                <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
+                            </PhTableColumnValues>
+                            <PhTableActions>
+                                <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                            </PhTableActions>
+                        </PhTable>
+                        <PhModal @ref="modalFormulario">
+                            <Title>Cuestionario con Novedades en PDS</Title>
+                            <Body>
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Formulario</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control form-control-lg" id="det" @bind-value="codigoFormulario">
+                                </div>
+                                <PhTable @ref="_table3" TPost="RegistroFormularioDTO" isSearcheable="false" isRefresh="false" TReturn="RegistroFormularioDTO" Body="@pds" EndPoint="@EndPointFormularioConNovedades">
+                                    <PhTableColumnHeaders>
+                                        <PhTableColumn Style="width:10%;" Value="Comisionista" IsHeader="true" />
+                                        <PhTableColumn Style="width:15%;" Value="Sección" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="Pregunta" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="Respuesta Comisionista" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="Novedad Supervisor" IsHeader="true" />
+                                        <PhTableColumn Style="width:30%;" Value="Fecha Revisión" IsHeader="true" />
+                                    </PhTableColumnHeaders>
+                                    <PhTableColumnValues>
+                                        <PhTableColumn Value="@context.codigoComisionista" Style="width:10%;" />
+                                        <PhTableColumn Value="@context.nombreSeccion" Style="width:15%;" />
+                                        <PhTableColumn Value="@context.descripcionPregunta" Style="width:20%;" />
+                                        @if (context.respuesta == true)
+                                        {
+                                            <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="CUMPLE" />
+                                        }
+                                        else
+                                        {
+                                            <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="NO CUMPLE" />
+                                        }
+                                        <PhTableColumn StatusColor="var(--ph-red)" Value="@context.descripcionNovedad" Style="width:20%;" />
+                                        <PhTableColumn Value="@context.fechaRevision?.ToString()" Style="width:30%;" />
+                                    </PhTableColumnValues>
+                                </PhTable>
+                            </Body>
+                            <Footer>
+                                <PhButton Type="ButtonType.Danger" @onclick="() => modalFormulario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            </Footer>
+                        </PhModal>
+                    </Body>
+                    <Footer>
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    </Footer>
+                </PhModal>
+            </Body>
+            <Footer>
+                <PhButton Type="ButtonType.Danger" @onclick="() => modalResumen.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+            </Footer>
+        </PhModal>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+@code {
+    Loading loader { get; set; } = new();
+    private List<ZonasInfo>? zonas;
+    private SupervisoresInfo[] supervisores;
+    private PhModal? modalResumen { get; set; } = new();
+    private PhModal? modalCuestionarios { get; set; } = new();
+    private PhModal? modalFormulario { get; set; } = new();
+    private string EndPointStr { get; set; } = null!;
+    private string EndPointCuestionarios { get; set; } = null!;
+    private string EndPointFormularioConNovedades { get; set; } = null!;
+    private string nombreZona { get; set; } = string.Empty;
+    RegistroFormularioDTO pds { get; set; } = null!;
+    private PhTable<ResumenGerencialZonasDTO, ResumenGerencialZonasDTO>? _table1 = new();
+    private PhTable<RegistroFormularioDTO, FormulariosporPOSDTO>? _table2 = new();
+    private PhTable<RegistroFormularioDTO, RegistroFormularioDTO>? _table3 = new();
+    ResumenGerencialZonasDTO resumen;    
+    private ResumenGerencialZonasDTO supervisor;
+    private int codigoPDS { get; set; } = 0;
+    private string nombrePDS { get; set; } = string.Empty;
+    private long codigoFormulario { get; set; } = 0;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./StoreCheck/Resumen", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+        }
+    }
+    protected override async void OnInitialized()
+    {
+        try
+        {
+            zonas = StoreService.RecuperarDataResumenZonas();
+        }
+        catch (Exception ex)
+        {
+            resumen = new ResumenGerencialZonasDTO();
+        }
+    }
+    private async void AxisLabelClickEvent(AxisLabelClickEventArgs args)
+    {
+        try
+        {
+            nombreZona = args.Text;
+            supervisor = new ResumenGerencialZonasDTO();
+            EndPointStr = EndPoints.obtenerResumenGerencialZonas;
+            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+               (EndPointStr, supervisor);
+
+            _table1.Data = result.Where(dt => dt.nombreZona == nombreZona).ToArray();
+
+
+            await modalResumen.NewModal();
+        }
+        catch (Exception ex)
+        {
+            resumen = new ResumenGerencialZonasDTO();
+        }
+    }
+    private async Task VerCuestionarios(ResumenGerencialZonasDTO dato)
+    {
+        try
+        {
+            codigoPDS = int.Parse(dato.codigoPDS.ToString());
+            nombrePDS = dato.nombrePDS;
+            EndPointCuestionarios = EndPoints.ConsultarFormulariosRevisadosporPOS;
+
+            ZonasPorSupervisorDTO datoConsultar = new ZonasPorSupervisorDTO();
+            datoConsultar.codigoPDS = dato.codigoPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<FormulariosporPOSDTO>
+               (EndPointCuestionarios, datoConsultar);
+
+            _table2.Data = result;
+            await modalCuestionarios.NewModal();
+        }
+        catch (Exception ex)
+        {
+            dato = new ResumenGerencialZonasDTO();
+        }
+    }
+    private async Task VerFormulario(FormulariosporPOSDTO formulario)
+    {
+        try
+        {
+            codigoFormulario = long.Parse(formulario.codigoFormulario.ToString());
+            EndPointFormularioConNovedades = EndPoints.consultarFormularioConNovedades;
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoFormulario = formulario.codigoFormulario;
+
+            var result = await _httpClient.PostAsJsonAsync<RegistroFormularioDTO>
+               (EndPointFormularioConNovedades, datoEnviar);
+
+            _table3.Data = result;
+            await modalFormulario.NewModal();
+        }
+        catch (Exception ex)
+        {
+            formulario = new FormulariosporPOSDTO();
+        }
+    }
+
+    
+   
+
+}

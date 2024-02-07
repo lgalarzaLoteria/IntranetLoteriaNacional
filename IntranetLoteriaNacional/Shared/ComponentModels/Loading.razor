@@ -1,0 +1,27 @@
+﻿<div style="z-index:@index" class="loader @load"></div>
+
+@code{
+    [Parameter]
+    public string loading { get; set; } = "";
+
+    [Parameter]
+    public string index { get; set; } = "999999999999;";
+
+    public string load { get; set; } = "";
+
+    public async Task Show()
+    {
+        load = "";
+        StateHasChanged();
+    }
+    public async Task Close()
+    {
+        load = "d-none";
+        StateHasChanged();
+    }
+    public bool isShow()
+    {
+        return load == "" ? true : false;
+    }
+
+}

@@ -1,0 +1,195 @@
+﻿<style>
+    body {
+        font-family: 'Avenir';
+    }
+
+    .modal-confirm {
+        color: #434e65;
+        width: 50%;
+    }
+
+        .modal-confirm .modal-content {
+            padding: 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .modal-confirm .modal-header {
+            background-color: var(--ph-green);
+            border-bottom: none;
+            position: relative;
+            text-align: center;
+            margin: -20px -20px 0;
+            border-radius: 5px 5px 0 0;
+            padding: 35px;
+        }
+
+        .modal-confirm h4 {
+            text-align: center;
+            font-size: 36px;
+            margin: 10px 0;
+        }
+
+        .modal-confirm .form-control, .modal-confirm .btn {
+            min-height: 40px;
+            border-radius: 3px;
+        }
+
+        .modal-confirm .close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #fff;
+            text-shadow: none;
+            /*opacity: 0.5;*/
+        }
+
+            .modal-confirm .close:hover {
+                /*opacity: 0.8;*/
+                background-color: var(--ph-red);
+            }
+
+        .modal-confirm .icon-box {
+            color: #fff;
+            width: 95px;
+            height: 95px;
+            display: inline-block;
+            border-radius: 50%;
+            z-index: 9;
+            border: 5px solid #fff;
+            padding: 15px;
+            text-align: center;
+        }
+
+            .modal-confirm .icon-box i {
+                font-size: 64px;
+                margin: -4px 0 0 -4px;
+            }
+
+        .modal-confirm.modal-dialog {
+            margin-top: 80px;
+        }
+
+        .modal-confirm .btn, .modal-confirm .btn:active {
+            color: #fff;
+            border-radius: 4px;
+            /*background: #eeb711 !important;*/
+            text-decoration: none;
+            transition: all 0.4s;
+            line-height: normal;
+            border-radius: 30px;
+            /*margin-top: 10px;*/
+            /*padding: 6px 20px;*/
+            /*border: none;*/
+        }
+
+            .modal-confirm .btn:hover, .modal-confirm .btn:focus {
+                /*background: #eda645 !important;*/
+                outline: none;
+                color: red;
+            }
+
+            .modal-confirm .btn span {
+                margin: 1px 3px 0;
+                float: left;
+            }
+
+            .modal-confirm .btn i {
+                margin-left: 1px;
+                font-size: 20px;
+                float: right;
+            }
+
+    .trigger-btn {
+        display: inline-block;
+        margin: 100px auto;
+    }
+
+    #myModal {
+        height: 100%;
+    }
+</style>
+<div id="myModal" class="modal fade @modalClass" style="display:@modalDisplay;z-index: 9999999;overflow-x: auto;overflow-y:auto;">
+    <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+            <div class="modal-header justify-content-center">
+                <div class="icon-box">
+                    <i class="@icon"></i>
+                </div>
+                <button type="button" style="color:white;" class="close btn btn-outline-dangerr" data-dismiss="modal" onclick="@CloseModal" aria-hidden="true" title="Cerrar">
+                    <i class="fa fa-xmark" aria-hidden="true" style="font-size:30px;"></i>
+                </button>
+                @*<button type="button" style="color:white" class="close" data-dismiss="modal"  aria-hidden="true">&times;</button>*@
+            </div>
+            <div class="modal-body text-center" style="height: 50%;">
+                @if (html != null)
+                {
+                    @html
+                }
+                else
+                {
+                    <h4>@accion</h4>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string? accion { get; set; }
+    [Parameter]
+    public string? icon { get; set; }
+
+    public RenderFragment html { get; set; }
+    private string modalDisplay = "none;";
+    private string modalClass = "";
+
+    public async Task SuccessModal(string? message = "")
+    {
+        html = null;
+        accion = message;
+        icon = "fa fa-check";
+        modalDisplay = "block;";
+        //await Task.Delay(100);
+        modalClass = "show";
+        StateHasChanged();
+    }
+    public async Task RenderHtml(string render)
+    {
+
+        RenderFragment html = builder =>
+        {
+            builder.AddMarkupContent(0, render);
+        };
+
+        // Asignar el fragmento de renderizado a la propiedad html
+        this.html = html;
+        icon = "fa fa-check";
+        modalDisplay = "block;";
+        //await Task.Delay(100);
+        modalClass = "show";
+        StateHasChanged();
+    }
+
+    public async Task ErrorModal(string? message = "")
+    {
+        html = null;
+        accion = message;
+        icon = "fa fa-close";
+        modalDisplay = "block;";
+        //await Task.Delay(100);
+        modalClass = "show";
+        StateHasChanged();
+    }
+
+    public async Task CloseModal()
+    {
+        html = null;
+        modalClass = "";
+        //await Task.Delay(250);
+        modalDisplay = "none;";
+        StateHasChanged();
+    }
+}
