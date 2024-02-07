@@ -1,4 +1,4 @@
-﻿@page "/Maintenance/Secciones"
+﻿@page "/Maintenance/Aplicaciones"
 
 @using Blazored.LocalStorage
 @using IntranetLoteriaNacional.Shared.ComponentModels
@@ -14,7 +14,6 @@
 @inject ProjectHttpClient _httpClient
 @inject SweetAlertService Swal
 
-
 <style>
     .column {
         width: 50%;
@@ -29,19 +28,18 @@
 </style>
 
 <article class="art">
-    <h1 class="tituloPagina">Secciones</h1>
+    <h1 class="tituloPagina">Aplicaciones</h1>
     <div class="input-group" style="width: 45%;">
         <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
     </div>
-
-    <PhModal @ref="modalSeccion">
-        <Title>Sección</Title>
+    <PhModal @ref="modalAplicacion">
+        <Title>Aplicación</Title>
         <Body>
-            <EditForm Model="seccionDTOForm">
+            <EditForm Model="aplicacionDTOForm">
                 <div class="form-group row" style="margin-bottom:2%;">
-                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Sección</label>
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Aplicación</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="seccionDTOForm.nombreSeccion" placeholder="Ingrese el nombre de la sección">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="aplicacionDTOForm.nombreAplicacion" placeholder="Ingrese el nombre de la aplicación">
                     </div>
                 </div>
                 <div class="form-group row" style="margin-bottom:2%;">
@@ -50,8 +48,8 @@
                     </div>
                     <div class="col-sm-2">
                         <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
-                            <input class="form-check-input" @bind-value="@seccionDTOForm.estadoSeccion" checked="@seccionDTOForm.estadoSeccion" type="checkbox" id="flexSwitchCheckChecked">
-                            @if (@seccionDTOForm.estadoSeccion == true)
+                            <input class="form-check-input" @bind-value="@aplicacionDTOForm.estadoAplicacion" checked="@aplicacionDTOForm.estadoAplicacion" type="checkbox" id="flexSwitchCheckChecked">
+                            @if (@aplicacionDTOForm.estadoAplicacion == true)
                             {
                                 <label class="form-check-label" for="flexSwitchCheckChecked">Activo</label>
                             }
@@ -66,30 +64,30 @@
         </Body>
         <Footer>
             <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
-            <PhButton Type="ButtonType.Danger" @onclick="() => modalSeccion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+            <PhButton Type="ButtonType.Danger" @onclick="() => modalAplicacion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
         </Footer>
     </PhModal>
     <div>
         <br />
-        <PhTable @ref="_table" TPost="SeccionesDTO" isRefresh="true" TReturn="SeccionesDTO" Body="new SeccionesDTO()" EndPoint="@EndPointStr"
+        <PhTable @ref="_table" TPost="AplicacionDTO" isRefresh="true" TReturn="AplicacionDTO" Body="new AplicacionDTO()" EndPoint="@EndPointStr"
                  SearchDefinition="@(new[]
                  {
-                    "nombreSeccion",
-                    "descripcionEstadoSeccion"
+                    "nombreAplicacion",
+                    "descripcionEstadoAplicacion"
                  })">
             <PhTableColumnHeaders>
-                <PhTableColumn Style="width:40%;" Value="Nombre Sección" IsHeader="true" />
-                <PhTableColumn Style="width:20%;" Value="Estado de la Sección" IsHeader="true" />
+                <PhTableColumn Style="width:40%;" Value="Nombre Aplicación" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Estado de la Aplicación" IsHeader="true" />
             </PhTableColumnHeaders>
             <PhTableColumnValues>
-                <PhTableColumn Value="@context.nombreSeccion" Style="width:40%;" />
-                @if (context.estadoSeccion == true)
+                <PhTableColumn Value="@context.nombreAplicacion" Style="width:40%;" />
+                @if (context.estadoAplicacion == true)
                 {
-                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoSeccion" />
+                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
                 }
                 else
                 {
-                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoSeccion" />
+                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
                 }
             </PhTableColumnValues>
             <PhTableActions>
@@ -102,23 +100,23 @@
         </PhNotification>
 
     </div>
+
     <Loading @ref="loader"></Loading>
 </article>
-
 
 @code {
     Loading loader { get; set; } = new();
 
-    private PhTable<SeccionesDTO, SeccionesDTO>? _table = new();
-    private PhModal? modalSeccion { get; set; } = new();
+    private PhTable<AplicacionDTO, AplicacionDTO>? _table = new();
+    private PhModal? modalAplicacion { get; set; } = new();
     private PhNotification modalNotification { get; set; } = new();
-    SeccionesDTO seccionDTOForm = new SeccionesDTO();
-    SeccionesDTO seccionDTO { get; set; } = null!;
+    AplicacionDTO aplicacionDTOForm = new AplicacionDTO();
+    AplicacionDTO AplicacionDTO { get; set; } = null!;
     private string EndPointStr { get; set; } = null!;
 
     protected override async void OnInitialized()
     {
-        EndPointStr = EndPoints.obtenerSecciones;
+        EndPointStr = EndPoints.obtenerAplicaciones;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -127,7 +125,7 @@
         {
             var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
             Validate validate = new Validate();
-            if (!validate.isValid("./Maintenance/Secciones", item))
+            if (!validate.isValid("./Maintenance/Aplicaciones", item))
             {
                 _navigation.NavigateTo("./Home/Error");
             }
@@ -137,10 +135,10 @@
 
     private async Task New()
     {
-        seccionDTOForm = new SeccionesDTO();
-        seccionDTOForm.estadoSeccion = true;
-        seccionDTOForm.codigoSeccion = 0;
-        await modalSeccion.NewModal();
+        aplicacionDTOForm = new AplicacionDTO();
+        aplicacionDTOForm.estadoAplicacion = true;
+        aplicacionDTOForm.codigoAplicacion = 0;
+        await modalAplicacion.NewModal();
     }
 
     private async Task sendData()
@@ -151,12 +149,12 @@
 
         try
         {
-            seccionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
-            seccionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+            aplicacionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            aplicacionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
 
-            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarSecciones)
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarAplicaciones)
                 {
-                    Content = JsonContent.Create(seccionDTOForm)
+                    Content = JsonContent.Create(aplicacionDTOForm)
                 };
             var postResponse = await _httpClient.SendAsync(postRequest);
             if (postResponse.IsSuccessStatusCode)
@@ -173,7 +171,7 @@
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "error";
                 }
-                await modalSeccion.CloseModal();
+                await modalAplicacion.CloseModal();
                 await loader.Close();
             }
             else
@@ -181,7 +179,7 @@
                 //await modalNotification.ErrorModal("Error de servicio");
                 mensajeTransaccion = "Error de servicio";
                 iconoMostrar = "error";
-                await modalSeccion.CloseModal();
+                await modalAplicacion.CloseModal();
                 await loader.Close();
             }
 
@@ -197,15 +195,15 @@
         catch (HttpRequestException e)
         {
             await modalNotification.ErrorModal(e.Message.ToString());
-            await modalSeccion.CloseModal();
+            await modalAplicacion.CloseModal();
             await loader.Close();
         }
     }
 
-    private async Task Update(SeccionesDTO seccionDTO)
+    private async Task Update(AplicacionDTO aplicacionDTO)
     {
-        seccionDTOForm = seccionDTO;
-        await modalSeccion.UpdateModal();
+        aplicacionDTOForm = aplicacionDTO;
+        await modalAplicacion.UpdateModal();
         StateHasChanged();
     }
 

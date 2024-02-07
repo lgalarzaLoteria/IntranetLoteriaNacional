@@ -29,5 +29,11 @@
         public static string consultarFormularioConNovedades = "StoreCheck/ConsultarFormularioConNovedades";
 
         #endregion
+
+        #region EndPoints Bitácora Soporte Batch
+        public static string obtenerAplicaciones = "Mantenimiento/MantenimientoObtenerAplicaciones";
+        public static string grabarAplicaciones = "Mantenimiento/MantenimientoGrabarAplicaciones";
+        public static string listarAplicaciones = "Mantenimiento/ObtenerAplicaciones";
+        #endregion
     }
 }

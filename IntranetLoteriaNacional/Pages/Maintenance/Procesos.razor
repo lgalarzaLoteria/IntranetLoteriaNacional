@@ -1,0 +1,167 @@
+﻿@page "/Maintenance/Procesos"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject ProjectHttpClient _httpClient
+@inject SweetAlertService Swal
+
+<article class="art">
+    <h1 class="tituloPagina">Procesos</h1>
+    <div class="input-group" style="width: 45%; ">
+        <Combo TItem="AplicacionDTO" text="nombreAplicacion" Data="Data" Identifier="comboModAplicacion" placeholder="Seleccione la aplicación" selectValue="dtSelectAplicacion" value="codigoAplicacion" ValueChanged="ValueChange">
+        </Combo>
+    </div>
+    <br />
+    <div class="input-group" style="width: 45%;">
+        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+    </div>
+
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+@code {
+    Loading loader { get; set; } = new();
+    IEnumerable<AplicacionDTO> Data;
+    AplicacionDTO dtSelectAplicacion = null;
+    AplicacionDTO aplicaciones = new AplicacionDTO();
+    private string EndPointAplicacion { get; set; } = null!;
+    string mensajeTransaccion = string.Empty;
+    string iconoMostrar = string.Empty;
+    private PhModal? modalProceso { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Maintenance/Procesos", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+            await loader.Close();
+        }
+    }
+    protected async override void OnInitialized()
+    {
+        EndPointAplicacion = EndPoints.listarAplicaciones;
+        //EndPointPregunta = EndPoints.obtenerPreguntas;
+        try
+        {
+
+            var result = await _httpClient.PostAsJsonAsync<AplicacionDTO>
+                (EndPointAplicacion, aplicaciones);
+            if (result is not null)
+            {
+                Data = result;
+                StateHasChanged();
+                await loader.Close();
+            }
+            else
+            {
+                mensajeTransaccion = "Error al comunicarse con el servicio";
+                iconoMostrar = "error";
+                await modalProceso.CloseModal();
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = iconoMostrar
+                    });
+            }
+
+        }
+        catch (Exception e)
+        {
+            mensajeTransaccion = e.Message.ToString();
+            iconoMostrar = "error";
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+            await loader.Close();
+        }
+    }
+    public async Task ValueChange(AplicacionDTO? item)
+    {
+        // if (item != null)
+        // {
+        //     dtSelectAplicacion = item;
+        //     PreguntasDTO deta = new PreguntasDTO();
+        //     if (dtSelectseccion != null)
+        //     {
+        //         await loader.Show();
+        //         try
+        //         {
+        //             deta.codigoSeccion = short.Parse(dtSelectseccion.codigoSeccion.ToString());
+        //             deta.equipoTransaccion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+        //             deta.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+        //             preguntaDTOForm.codigoSeccion = deta.codigoSeccion;
+        //             pregunta = deta;
+        //             loadTable();
+        //         }
+        //         catch (Exception ex)
+        //         {
+
+        //             deta = new PreguntasDTO();
+        //             pregunta = deta;
+        //             loadTable();
+        //         }
+
+        //     }
+        //     else
+        //     {
+        //         deta.codigoSeccion = 0;
+        //         deta.equipoTransaccion = "PC";
+        //         deta.usuarioTransaccion = "jucast";
+        //         pregunta = deta;
+        //         loadTable();
+        //         pregunta = null;
+        //     }
+        // }
+
+    }
+    private async Task New()
+    {
+        // if (dtSelectseccion != null)
+        // {
+        //     preguntaDTOForm = new PreguntasDTO();
+        //     preguntaDTOForm.codigoSeccion = pregunta.codigoSeccion;
+        //     preguntaDTOForm.estadoPregunta = true;
+        //     preguntaDTOForm.codigoPregunta = 0;
+        //     vigenciaDesde = System.DateTime.Now;
+        //     vigenciaHasta = System.DateTime.Now.AddDays(7);
+
+        //     await modalPregunta.NewModal();
+        // }
+        // else
+        // {
+        //     //await modalNotification.ErrorModal("Seleccione un cátalogo");
+        //     mensajeTransaccion = "Seleccione un cátalogo";
+        //     iconoMostrar = "info";
+        //     await Swal.FireAsync(new SweetAlertOptions
+        //         {
+        //             ConfirmButtonColor = "var(--ph-skyblue)",
+        //             Title = "Intranet Lotería Nacional",
+        //             Text = mensajeTransaccion,
+        //             Icon = iconoMostrar
+        //         });
+        // }
+    }
+}
