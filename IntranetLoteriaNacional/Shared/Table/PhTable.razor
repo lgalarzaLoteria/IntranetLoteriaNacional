@@ -1,0 +1,761 @@
+﻿@typeparam TPost
+@typeparam TReturn
+
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Constants
+@using System.Globalization;
+@inject ProjectHttpClient _myHttpClient
+@using System.Net.Http;
+@using IntranetLoteriaNacional.Shared.Constants
+@using Microsoft.AspNetCore.Razor.TagHelpers
+
+<style>
+    table, th {
+        font-size: 0.9em;
+        font-weight: 100;
+    }
+
+    .has-search .form-control {
+        padding-left: 2.375rem;
+    }
+
+    .has-search .form-control-feedback {
+        /*position: absolute;*/
+        /*z-index: 2;*/
+        display: block;
+        width: 2.375rem;
+        height: 2.375rem;
+        line-height: 2.375rem;
+        text-align: center;
+        pointer-events: none;
+        color: #aaa;
+    }
+
+    #button {
+        background-color: Transparent;
+        background-repeat: no-repeat;
+        border: none;
+        cursor: pointer;
+        overflow: hidden;
+        outline: none;
+    }
+    /*
+        .column {
+            float: left;
+        }
+    */
+    .left {
+        width: 80%;
+    }
+
+    .right {
+        width: 19%;
+    }
+
+    
+
+    .tableFixHead {
+        overflow: auto;
+        min-height: 150px !important;
+        max-height: 500px !important;
+        scrollbar-width: thin; /* Para navegadores Firefox */
+        scrollbar-color: #888888 #F0F0F0; /* Para navegadores Firefox */
+    }
+
+        /* Estilos específicos para navegadores Chrome, Edge y Safari */
+        .tableFixHead::-webkit-scrollbar {
+            width: 20px;
+        }
+
+        .tableFixHead::-webkit-scrollbar-track {
+            background-color: #F0F0F0;
+        }
+
+        .tableFixHead::-webkit-scrollbar-thumb {
+            background-color: #888888;
+        }
+
+        .tableFixHead thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: var(--ph-blue);
+            color: white;
+        }
+
+        .tableFixHead thead {
+            border-radius: 8px;
+            width: calc(100ph);
+        }
+
+        .tableFixHead tbody tr.Selected {
+            background: rgba(67, 176, 42, 0.3);
+            box-shadow: inset 0px 4px 4px rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+        }
+
+    /* Just common table stuff. Really. */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px 16px;
+    }
+</style>
+
+
+
+
+@if (Error is null)
+{
+    <div class="row" style="margin-bottom:2%;">
+        @if (EventRow == null)
+        {
+            @if (isSearcheable == null)
+            {
+                <div class="col-12 col-md-@(isExport is null ? "10": "2")" style="margin-bottom: 5px;">
+                    <div class="form-group has-search">
+                        <div class="input-group">
+                            <span class="fa fa-search form-control-feedback"></span>
+                            <input @bind="Search" @onkeyup="OnEnterUpSearch" type="text" class="form-control" placeholder="Búsqueda rápida">
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="col-12 col-md-2">
+                @if (isRefresh is not null)
+                {
+                    if (isRefresh.Value)
+                    {
+                        <button class="btn btn-secondary" type="button" name="refresh" aria-label="Refresh" style="margin-right:10px; " title="Actualizar" @onclick="Refresh">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    }
+
+
+                }
+                @if (isExport is not null)
+                {
+                    @if (isExport.Value)
+                    {
+                        @if (Data != null)
+                        {
+                           <a class="btn excel" style="" title="Descargar excel" @onclick="exportFile">
+                                <i class="bi bi-filetype-xls">
+                                </i>
+                            </a>
+                            @*<a class="btn excel" style="" title="Descargar excel" href="@($"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{Convert.ToBase64String(Methods.ObjToExcel(Data.ToList(), "Sheet1"))}")" download="Listado.xlsx">
+                                <i class="bi bi-filetype-xls">
+                                </i>
+                            </a>*@
+                        }
+
+                    }
+                }
+
+            </div>
+        }
+        else
+        {
+            @if (isSearcheable == null)
+            {
+                <div class="col-12 col-md-6" style="margin-bottom: 5px;">
+                    <div class="form-group has-search">
+                        <div class="input-group">
+                            <span class="fa fa-search form-control-feedback"></span>
+                            <input @bind="Search" @onkeyup="OnEnterUpSearch" type="text" class="form-control" placeholder="Búsqueda rápida">
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="col-4 col-md-2 d-flex align-items-center">
+                <span style="text-align:center">Nro. Recibos: @(Data!=null ? Data.Length: 0)</span>
+            </div>
+            <div class="col-4 col-md-2 d-flex align-items-center">
+                <span style="text-align:center">Monto: @(Data!=null ? sumValues(Data, parameterSum) : 0)</span>
+            </div>
+            <div class="col-4 col-md-2 d-flex align-items-center">
+                @if (isRefresh is not null)
+                {
+                    if (isRefresh.Value)
+                    {
+                        <button class="btn btn-secondary" type="button" name="refresh" aria-label="Refresh" style="margin-right:10px; " title="Actualizar" @onclick="Refresh">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    }
+
+
+                }
+
+                @if (isExport is not null)
+                {
+                    @if (isExport.Value)
+                    {
+                        @if (Data != null)
+                        {
+                            <a class="btn excel" style="" title="Descargar excel" @onclick="exportFile">
+                                <i class="bi bi-filetype-xls">
+                                </i>
+                            </a>
+                            @*<a class="btn excel" style="" title="Descargar excel" href="@($"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{Convert.ToBase64String(Methods.ObjToExcel(Data.ToList(), "Sheet1"))}")" download="Listado.xlsx">
+                        <i class="bi bi-filetype-xls">
+                        </i>
+                    </a>*@
+                        }
+
+                    }
+                }
+
+            </div>
+        }
+
+
+    </div>
+    <div class="table-responsive tableFixHead">
+        <table class="table table-striped" id="@idTable">
+            <!-- Encabezado de la tabla -->
+            <thead>
+                <tr>
+                    @if (aplyEventsCheck != null && Data != null)
+                    {
+                        if (aplyEventsCheck.Value)
+                        {
+                            if (showAllCheck is not null)
+                            {
+                                if (showAllCheck.Value)
+                                {
+                                    <th>
+                                        <input type="checkbox" checked="@checkItemAll" @onchange="@(() => itemsCheckAll(Data))" />
+                                    </th>
+                                }
+                                else
+                                {
+                                    <th>
+
+                                    </th>
+
+                                }
+                            }
+                            else
+                            {
+                                <th>
+                                    <input type="checkbox" checked="@checkItemAll" @onchange="@(() => itemsCheckAll(Data))" />
+                                </th>
+                            }
+
+
+
+                        }
+                    }
+                    <!-- Columnas de la tabla -->
+                    @PhTableColumnHeaders
+
+                    <!-- Acciones -->
+                    @if (PhTableActions is not null)
+                    {
+                        <th style="padding: 14px; width: 10%;" scope="row">Opciones</th>
+                    }
+                </tr>
+            </thead>
+            <!-- Cuerpo de la tabla -->
+
+            @if (Data != null)
+            {
+                <tbody>
+                    <!-- Iterar sobre cada fila de datos -->
+                    @foreach (var item in Data!.Where(d => Search is null || SearchDefinition.Any(sd => (d.GetType().GetProperty(sd)?.GetValue(d, null)?.ToString()?.Contains(Search, StringComparison.InvariantCultureIgnoreCase) ?? false))))
+                    {
+                        if (EventRow != null)
+                        {
+                            if (EventRow.Value)
+                            {
+                                bool isSelected = SelectedItem != null ? item.GetType().GetProperty("codigoPago").GetValue(item).Equals(SelectedItem.GetType().GetProperty("codigoPago").GetValue(SelectedItem)) : false;
+                                <tr style="@(paintRow(item,"finalizado")?"border: 3px solid green; ":"")" @onclick="@(() => HandleRowClick(item))" class="@(isSelected ? "Selected" : "")">
+                                    <!-- Valores de cada columna en la fila actual -->
+                                    @if (aplyEventsCheck != null)
+                                    {
+                                        if (aplyEventsCheck.Value)
+                                        {
+                                            @if (!item.GetType().GetProperty(ParameterCheckValue).GetValue(item).Equals(ParameterCheckConfirm))
+                                            {
+                                                <td>
+                                                    <input type="checkbox" checked="@item.GetType().GetProperty("check").GetValue(item)" @onclick="@(() => itemChek(item))" />
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td>
+                                                </td>
+                                            }
+
+
+                                        }
+                                    }
+                                    @PhTableColumnValues(item)
+
+                                    <!-- Acciones de la fila actual -->
+                                    @if (PhTableActions is not null)
+                                    {
+                                        <td class="text-nowrap" style="font-size: 5px;width: 10%;" scope="row">
+                                            @PhTableActions(item)
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            @if (aplyEventsCheck != null)
+                            {
+                                
+                                @if (parameterCheck is not null)
+                                {
+
+                                    if ((item.GetType().GetProperty("render").GetValue(item).Equals(true)))
+                                    {
+                                        //changeRenderData(0);
+                                            @if (item.GetType().GetProperty("check").GetValue(item).Equals(true)
+                                            && item.GetType().GetProperty(parameterCheck).GetValue(item) is null ? true : item.GetType().GetProperty("check").GetValue(item).Equals(true)
+                                            && item.GetType().GetProperty(parameterCheck).GetValue(item) is not null ? true : (item.GetType().GetProperty("check").GetValue(item).Equals(false) && item.GetType().GetProperty(parameterCheck).GetValue(item) is not null ? true : false)
+                                            )
+                                            {
+                                                item.GetType().GetProperty("check").SetValue(item, true);
+                                                item.GetType().GetProperty("render").SetValue(item, false);
+                                                //itemChek(item);
+                                            }                
+                                       
+                                    }
+
+
+                                    <tr class="@(item.GetType().GetProperty("check").GetValue(item).Equals(true)?"tachado":"")">
+                                        @if (aplyEventsCheck.Value)
+                                        {
+                                            <td>
+                                                <input id="@(item.GetType().GetProperty(parameterIdenfierItem).GetValue(item) is not null ? item.GetType().GetProperty(parameterIdenfierItem).GetValue(item).ToString(): "")" type="checkbox" checked="@(
+                                                item.GetType().GetProperty("check").GetValue(item).Equals(true) && item.GetType().GetProperty(parameterCheck).GetValue(item) is  null? true:
+                                                 item.GetType().GetProperty("check").GetValue(item).Equals(true) && item.GetType().GetProperty(parameterCheck).GetValue(item) is not null ?  true 
+                                                 : (item.GetType().GetProperty("check").GetValue(item).Equals(false) && item.GetType().GetProperty(parameterCheck).GetValue(item) is not null ? false
+                                                 
+                                                 : false )
+                                                 )" @onchange="@(() => itemChek(item))" />
+                                                @*<input type="checkbox" checked="@(item.GetType().GetProperty("check").GetValue(item).Equals(true)
+                                    && item.GetType().GetProperty(parameterCheck).GetValue(item) is  null? true:  (item.GetType().GetProperty("check").GetValue(item).Equals(false) && item.GetType().GetProperty(parameterCheck).GetValue(item) is not null ? true : false )
+                                    )" @onchange="@(() => itemChek(item))" />*@
+
+                                            </td>
+
+                                        }
+                                        @PhTableColumnValues(item)
+
+                                        <!-- Acciones de la fila actual -->
+                                        @if (PhTableActions is not null)
+                                        {
+                                            <td class="text-nowrap" style="font-size: 5px;width: 10%;" scope="row">
+                                                @PhTableActions(item)
+                                            </td>
+                                        }
+                                    </tr>
+
+                                }
+                                else
+                                {
+                                    @if (item.GetType().GetProperty("check") != null)
+                                    {
+                                        <tr class="@(item.GetType().GetProperty("check").GetValue(item).Equals(true)?"tachado":"")">
+                                            @if (aplyEventsCheck.Value)
+                                            {
+                                                <td>
+                                                    <input type="checkbox" checked="@item.GetType().GetProperty("check").GetValue(item)" @onchange="@(() => itemChek(item))" />
+                                                </td>
+
+                                            }
+                                            @PhTableColumnValues(item)
+
+                                            <!-- Acciones de la fila actual -->
+                                            @if (PhTableActions is not null)
+                                            {
+                                                <td class="text-nowrap" style="font-size: 5px;width: 10%;" scope="row">
+                                                    @PhTableActions(item)
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr class="@(item.GetType().GetProperty("estadoRegistro").GetValue(item).Equals(true)?"tachado":"")">
+                                            @if (aplyEventsCheck.Value)
+                                            {
+                                                <td>
+                                                    <input type="checkbox" checked="@item.GetType().GetProperty("estadoRegistro").GetValue(item)" @onchange="@(() => itemChek(item))" />
+                                                </td>
+
+                                            }
+                                            @PhTableColumnValues(item)
+
+                                            <!-- Acciones de la fila actual -->
+                                            @if (PhTableActions is not null)
+                                            {
+                                                <td class="text-nowrap" style="font-size: 5px;width: 10%;" scope="row">
+                                                    @PhTableActions(item)
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                  
+                                }
+
+                            }
+                            else
+                            {
+                                <tr>
+
+                                    @PhTableColumnValues(item)
+
+                                    <!-- Acciones de la fila actual -->
+                                    @if (PhTableActions is not null)
+                                    {
+                                        <td class="text-nowrap" style="font-size: 5px;width: 10%;" scope="row">
+                                            @PhTableActions(item)
+                                        </td>
+
+                                    }
+
+                                </tr>
+                            }
+                            <!-- Valores de cada columna en la fila actual -->
+                        }
+
+                    }
+
+                </tbody>
+            }
+            else
+            {
+                <span><em>No se encontraron registros</em></span>
+            }
+
+        </table>
+
+    </div>
+
+
+}
+else
+{
+    <h3 style="color: var(--ph-red)">@Error</h3>
+}
+<Loading index="9999999999999" @ref="loader"></Loading>
+
+@code {
+    [Parameter]
+    public string EndPoint { get; set; } = null!;
+
+    [Parameter]
+    public string? AbsoluteUri { get; set; }
+
+    [Parameter]
+    public string? ParameterCheckValue { get; set; }
+    [Parameter]
+    public string? ParameterCheckConfirm { get; set; }
+
+    [Parameter]
+    public bool? isExport { get; set; } = null!;
+    [Parameter]
+    public bool? showAllCheck { get; set; } = null!; // mostrar combo check all
+
+    [Parameter]
+    public IEnumerable<string> SearchDefinition { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment<TReturn> PhTableActions { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment PhTableColumnHeaders { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment<TReturn> PhTableColumnValues { get; set; } = null!;
+
+    [Parameter]
+    public TPost? Body { get; set; }
+
+    [Parameter]
+    public bool? EventRow { get; set; }
+
+    public TReturn SelectedItem { get; set; }
+
+    [Parameter]
+    public bool? EventClickContent { get; set; }
+
+    [Parameter]
+    public bool? isRefresh { get; set; }
+
+    [Parameter]
+    public bool? isAgroup { get; set; }
+    [Parameter]
+    public string idTable { get; set; } = "table";
+
+    [Parameter]
+    public bool? isSearcheable { get; set; }
+
+    [Parameter]
+    public Func<TReturn, Task> HandleItem { get; set; } // utilizado para agregar un evento click a la fila de la tabla
+                                                        // si no se envia no se aplicara el evento
+    [Parameter]
+    public string titleExport { get; set; } = "tableExport";
+
+    [Parameter]
+    public string columnsExportSeparaterComas { get; set; } = "all";
+    [Parameter]
+    public string parameterIdenfierItem { get; set; } // parametro para actualizar el dato
+
+    [Parameter]
+    public string parameterSum { get; set; } //AUN NO USADO REEMPLAZA CON PARAMETER USADO PARA SUMAR TOTALES, NO REQUERIDO
+
+
+    /******** Utilizado para agregar una columna check *******/
+    /***EVENTO****/
+    [Parameter]
+    public Func<TReturn, Task> ItemCheckEvnt { get; set; } // EVENTO 1 ITEM
+    [Parameter]
+    public Func<TReturn[], bool, Task> ItemAllCheck { get; set; } // EVENTO ALL ITEM
+    /**********/
+    [Parameter]
+    public bool? aplyEventsCheck { get; set; } /**PARAMETRO PARA APLICAR O NO EL EVENTO CHECK POR ITEM O TODOS**/
+
+    [Parameter]
+    public string? parameterCheck { get; set; } = null;/**Parametro para marcar los registros por defecto*/
+    /***********************************************************/
+
+    Loading loader { get; set; } = new();
+    private bool checkItemAll = false;
+
+    //[Parameter]
+    //public Action<TReturn> HandleItem { get; set; }
+
+    public TReturn[] Data { get; set; } = Array.Empty<TReturn>();
+
+    private IEnumerable<string> Columns { get; set; } = Array.Empty<string>();
+
+    private IEnumerable<string> Properties { get; set; } = Array.Empty<string>();
+
+    private string? Error { get; set; }
+
+    private bool? controlCheck = true;
+
+    private string? Search { get; set; }
+    private bool isTableRendered = false;
+    private bool renderFirst = false;
+    private bool renderData { get; set; } = true;
+    CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+    private void OnEnterUpSearch(KeyboardEventArgs args)
+    {
+        tokenSource.Cancel(); //Si hay un cambio de la propiedad "Search" dentro de los 1000 milisegundos se cancela la busqueda anterior
+
+        Task.Run(async () =>
+        {
+            await Task.Delay(1000);
+            var s = Search;
+        }, tokenSource.Token);
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (isAgroup != null && renderFirst)
+        {
+            if (isAgroup.Value)
+            {
+                await JSRuntime.InvokeVoidAsync("observeTableChanges", idTable);
+            }
+        }
+        await GetDataAsync();
+    }
+    public void Dispose()
+    {
+        isTableRendered = false;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeFunctions");
+            renderFirst = true;
+        }
+        else {
+            if (isAgroup != null && renderFirst)
+            {
+                if (isAgroup.Value)
+                {
+                    await JSRuntime.InvokeVoidAsync("observeTableChanges", idTable);
+                }
+            }
+        }
+        await loader.Close();
+    }
+
+
+
+    public async Task Refresh()
+    {
+        await loader.Show();
+        await GetDataAsync();
+
+    }
+
+
+    public async Task GetDataAsync()
+    {
+        try
+        {
+            Data = await _myHttpClient.PostAsJsonAsync<TReturn>(EndPoint, Body!);
+            checkItemAll = false;
+            if (isAgroup == true)
+            {
+                await JSRuntime.InvokeVoidAsync("observeTableChanges", idTable);
+            }
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Data = null;
+            StateHasChanged();
+        }
+    }
+
+
+    public async Task changeExport()
+    {
+        isExport = true;
+        StateHasChanged();
+    }
+
+    public async Task changeRenderData(int option)
+    {
+        renderData = option == 1 ? true:  false;
+        await InvokeAsync(StateHasChanged);
+        //paintConsola("renderData: false");
+    }
+    public async Task RefreshComponent()
+    {
+        renderData = true;
+        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
+        renderData = false;
+        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
+        //paintConsola("renderData: false");
+    }
+
+    private void Download()
+    {
+        var obj = Methods.ObjToExcel(Data.ToList(), "Export_File");
+
+    }
+
+
+    private async Task exportFile()
+    {
+        await JSRuntime.InvokeVoidAsync("exportarTabla", idTable, columnsExportSeparaterComas, titleExport);
+
+    }
+
+    private async Task paintConsola(string texto)
+    {
+        await JSRuntime.InvokeVoidAsync("paintConsola", texto);
+
+    }
+
+    private string sumValues(TReturn[] Data, string? parameter) // parameter usado para leer cualquier DTO con el getproperty
+    {
+        decimal sum = 0;
+        foreach (var fila in Data)
+        {
+            string element = fila.GetType().GetProperty(parameter).GetValue(fila).ToString().Replace("$", "");
+            decimal value = decimal.Parse(element, CultureInfo.GetCultureInfo("en-US"));
+            sum = sum + value;
+        }
+        return sum.ToString("C", new CultureInfo("en-US"));
+    }
+
+
+    /*********EVENTO Y METODOS PARA EVENTO CLICK POR FILA GENERICO******/
+    private async Task HandleRowClick(TReturn item)
+    {
+
+        if (controlCheck.Value)
+        {
+            SelectedItem = item;
+            await InvokeAsync(StateHasChanged);
+            await HandleItem?.Invoke(item);
+        }
+        controlCheck = true;
+
+
+    }
+    public async Task selectItem(TReturn item)
+    {
+        SelectedItem = item;
+        StateHasChanged();
+    }
+    private bool paintRow(TReturn item, string? parameter) // parameter usado para leer cualquier DTO con el getproperty
+    {
+        decimal sum = 0;
+        string element = item.GetType().GetProperty(parameter).GetValue(item).ToString();
+
+        return element == "1" ? true : false;
+
+    }
+    /*****************************************************/
+
+    /*********METODOS PARA EVENTOS CHECK EN LA TABLA******/
+    private async Task itemChek(TReturn item) // Evento
+    {
+        controlCheck = false;
+        SelectedItem = item;
+        await InvokeAsync(StateHasChanged);
+        await ItemCheckEvnt?.Invoke(item);
+        //StateHasChanged();
+    }
+
+
+    private async Task itemsCheckAll(TReturn[] data) // Evento
+    {
+        checkItemAll = !checkItemAll;
+        await InvokeAsync(StateHasChanged);
+        await ItemAllCheck?.Invoke(data, checkItemAll);
+        StateHasChanged();
+    }
+    /*****************************************************/
+
+
+    public async Task unSelectCheck(TReturn item, bool select) // Se usa mas para revertir el check (checkbox) del item, es necesario heredar la clase donde esta la propiedad check
+    {
+        if (parameterIdenfierItem is not null)
+        {
+            foreach (var fila in Data)
+            {
+                if (fila.GetType().GetProperty(parameterIdenfierItem).GetValue(fila).ToString().Equals(item.GetType().GetProperty(parameterIdenfierItem).GetValue(item).ToString()))
+                {
+                    fila.GetType().GetProperty("check").SetValue(item, select);
+                    var idFactura = fila.GetType().GetProperty(parameterIdenfierItem).GetValue(fila).ToString();
+                    await JSRuntime.InvokeVoidAsync("ReverSelectCheck", idFactura, select);
+                    break;
+                }
+            }
+            StateHasChanged();
+        }
+
+    }
+
+}
