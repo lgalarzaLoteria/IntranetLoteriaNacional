@@ -102,17 +102,17 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-sm-5" style="text-align:center">
-                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Pregunta</label>
+                            <div class="col-sm-6" style="text-align:center">
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Pregunta</label>
                             </div>
                             <div class="col-sm-2" style="text-align:center">
-                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Comisionista</label>
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Comisionista</label>
                             </div>
                             <div class="col-sm-2" style="text-align:left">
-                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Supervisor</label>
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Supervisor</label>
                             </div>
-                            <div class="col-sm-2" style="text-align:center">
-                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Motivo</label>
+                            <div class="col-sm-2" style="text-align:left">
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Motivo</label>
                             </div>
                         </div>
                         <ul class="nav flex-column">
@@ -149,7 +149,7 @@
                                                                         <option value="2">No expone los productos a la vista del cliente</option>
                                                                         <option value="3">No cumple</option>
                                                                     </select> *@
-                                                                    <select class="form-control" @bind="@pregunta.codigoNovedad" style="width:350px">
+                                                                    <select class="form-control" @bind="@pregunta.codigoNovedad" style="width:380px">
                                                                         <option value=""></option>
                                                                         @foreach (var novedad in novedadesList)
                                                                         {
