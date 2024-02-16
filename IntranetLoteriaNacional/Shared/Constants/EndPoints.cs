@@ -27,6 +27,7 @@
         public static string consultarFormularioIngresado = "StoreCheck/ConsultarFormularioIngresado";
         public static string obtenerResumenGerencialZonas = "StoreCheck/ObtieneResumenGerencialZonas";
         public static string consultarFormularioConNovedades = "StoreCheck/ConsultarFormularioConNovedades";
+        public static string revisarCuestionario = "StoreCheck/RevisarFormulario";
 
         #endregion
 

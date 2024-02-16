@@ -92,7 +92,7 @@
                     </PhTableActions>
                 </PhTable>
 
-                <PhModal @ref="modalCuestionario">
+                <PhModal @ref="modalCuestionario" maxwidth="100%">
                     <Title>Cuestionario Ingresado</Title>
                     <Body>
                         <div class="form-group row" style="margin-bottom:2%;">
@@ -101,6 +101,73 @@
                                 <input type="text" class="form-control form-control-lg" id="det" @bind-value="codigoFormulario">
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-sm-5" style="text-align:center">
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Pregunta</label>
+                            </div>
+                            <div class="col-sm-2" style="text-align:center">
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Comisionista</label>
+                            </div>
+                            <div class="col-sm-2" style="text-align:left">
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Supervisor</label>
+                            </div>
+                            <div class="col-sm-2" style="text-align:center">
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Motivo</label>
+                            </div>
+                        </div>
+                        <ul class="nav flex-column">
+                            @if (DataSeccion != null)
+                            {
+                                @foreach (var seccion in DataSeccion)
+                                {
+                                    <li class="nav-item">
+                                        <NavLink class="nav-link">
+                                            <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
+                                            @{ string nombrePanel = "nav" + seccion.nombreSeccion; }
+                                            <table class="table">
+                                                <tbody>
+                                                    @{
+                                                        int count = 0;
+                                                    }
+                                                    @if (preguntasList != null)
+                                                    {
+                                                        string nombreGrupo = "nombreGrupo" + count.ToString();
+                                                        foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                        {
+                                                            <tr name="nombreGrupo">
+                                                                <td>@pregunta.descripcionPregunta.Trim()</td>
+                                                                <td width="50px" style="text-align:center">
+                                                                    <input style="align-content:center" type="checkbox" @bind-value="pregunta.respuesta" checked="@pregunta.respuesta" disabled="True" />
+                                                                </td>
+                                                                <td width="50px" style="text-align:center">
+                                                                    <input style="align-content:center" type="checkbox" @bind-value="pregunta.presentaNovedad" checked="@pregunta.presentaNovedad" />
+                                                                </td>
+                                                                <td>
+                                                                    @* <select class="form-select" aria-label="Default select example" style="width:100px">
+                                                                        <option value="0" selected>Seleccione una novedad</option>
+                                                                        <option value="1">Equipo no esta en buen estado</option>
+                                                                        <option value="2">No expone los productos a la vista del cliente</option>
+                                                                        <option value="3">No cumple</option>
+                                                                    </select> *@
+                                                                    <select class="form-control" @bind="@pregunta.codigoNovedad" style="width:350px">
+                                                                        <option value=""></option>
+                                                                        @foreach (var novedad in novedadesList)
+                                                                        {
+                                                                            <option value="@novedad.codigoNovedad"> @novedad.descripcionNovedad </option>
+                                                                        }
+                                                                    </select>
+                                                                </td>
+                                                            </tr>
+                                                            count++;
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </NavLink>
+                                    </li>
+                                }
+                            }
+                        </ul>
                     </Body>
                     <Footer>
                         <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
@@ -132,6 +199,7 @@
     private string EndPointStr { get; set; } = null!;
     private string EndPointCuestionarios { get; set; } = null!;
     private string EndPointFormularioIngresado { get; set; } = null!;
+    private string EndPointNovedades { get; set; } = null!;
     LoginDTO login { get; set; } = null!;
     RegistroFormularioDTO pds { get; set; } = null!;
     private PhModal? modalCuestionarios { get; set; } = new();
@@ -139,7 +207,13 @@
     private int codigoPDS { get; set; } = 0;
     private string nombrePDS { get; set; } = string.Empty;
     private long codigoFormulario { get; set; } = 0;
-
+    IEnumerable<SeccionesDTO> DataSeccion;
+    public IEnumerable<RegistroFormularioDTO> preguntasList;
+    public IEnumerable<NovedadesDTO> novedadesList;
+    string mensajeTransaccion = string.Empty;
+    string iconoMostrar = string.Empty;
+    NovedadesDTO novedades = new NovedadesDTO();
+    NovedadesDTO dtSelectnovedad = null;
 
     protected override async void OnInitialized()
     {
@@ -153,6 +227,20 @@
                (EndPointStr, login);
 
             _table.Data = result;
+
+            novedadesList = await _httpClient.PostAsJsonAsync<NovedadesDTO>(EndPoints.obtenerNovedades, novedades);
+            if (novedadesList == null)
+            {
+                mensajeTransaccion = "No existen novedades registradas, por favor comuníquese con el administrador";
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = "info"
+                    });
+            }
         }
         catch (Exception ex)
         {
@@ -178,7 +266,95 @@
 
     private async Task sendData()
     {
+        await loader.Show();
+        mensajeTransaccion = string.Empty;
+        iconoMostrar = string.Empty;
+        try
+        {
+            RegistroDTO listaEnviar = new RegistroDTO();
 
+            List<RegistroFormularioDTO> registro = new List<RegistroFormularioDTO>();
+            foreach (var item in preguntasList)
+            {
+                RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                if (item.presentaNovedad == null)
+                    item.presentaNovedad = false;
+
+                if (item.respuesta == null)
+                    item.respuesta = false;
+
+                datoEnviar.codigoRegistro = item.codigoRegistro;
+                datoEnviar.codigoFormulario = item.codigoFormulario;
+                datoEnviar.codigoComisionista = item.codigoComisionista;
+                datoEnviar.codigoPDS = item.codigoPDS;
+                datoEnviar.codigoSeccion = item.codigoSeccion;
+                datoEnviar.codigoPregunta = item.codigoPregunta;
+                datoEnviar.respuesta = item.respuesta;
+                datoEnviar.codigoSupervisor = "fmorla";//await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.presentaNovedad = item.presentaNovedad;
+                datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
+                datoEnviar.fechaRevision = DateTime.Now.ToString("yyyy-MM-dd");
+                datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt"));
+
+                registro.Add(datoEnviar);
+            }
+
+            listaEnviar.registro = registro;
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionario)
+                {
+                    Content = JsonContent.Create(listaEnviar)
+                };
+
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await modalCuestionario.CloseModal();
+                await loader.Close();
+            }
+            else
+            {
+                //await modalNotification.ErrorModal("Error de servicio");
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await loader.Close();
+            }
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+            //this.OnInitialized();
+        }
+        catch (HttpRequestException e)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = e.Message.ToString(),
+                    Icon = "error"
+                });
+        }
     }
 
     private async Task VerCuestionarios(ZonasPorSupervisorDTO dato)
@@ -219,6 +395,18 @@
                (EndPointFormularioIngresado, formulario);
 
             //_table2.Data = result;
+            List<SeccionesDTO> listaSecciones = new List<SeccionesDTO>();
+            foreach (var itemSeccion in result.Select(m => new { m.codigoSeccion, m.nombreSeccion }).Distinct())
+            {
+                SeccionesDTO datoSeccion = new SeccionesDTO();
+                datoSeccion.codigoSeccion = itemSeccion.codigoSeccion;
+                datoSeccion.nombreSeccion = itemSeccion.nombreSeccion;
+                listaSecciones.Add(datoSeccion);
+            }
+            DataSeccion = (IEnumerable<SeccionesDTO>)listaSecciones;
+
+            preguntasList = result;
+
             await modalCuestionario.NewModal();
         }
         catch (Exception ex)
@@ -227,4 +415,6 @@
             formulario = new FormulariosporPOSDTO();
         }
     }
+
+    
 }
