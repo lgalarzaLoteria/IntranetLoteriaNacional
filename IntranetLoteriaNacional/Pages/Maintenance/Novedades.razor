@@ -149,6 +149,20 @@
 
         try
         {
+            if (novedadDTOForm.descripcionNovedad == null || novedadDTOForm.descripcionNovedad == string.Empty)
+            {
+                await loader.Close();
+                mensajeTransaccion = "La descripción de la novedad debe ser ingresada";
+                iconoMostrar = "error";
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = iconoMostrar
+                    });
+                return;
+            }
             novedadDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
             novedadDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
 

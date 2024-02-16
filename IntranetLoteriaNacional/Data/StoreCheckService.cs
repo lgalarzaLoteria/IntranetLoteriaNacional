@@ -16,10 +16,11 @@ namespace IntranetLoteriaNacional.Data
         private string EndPointStr { get; set; } = null!;
         ResumenGerencialZonasDTO resumen;
         ResumenGerencialZonasDTO[] Data;
-        
+        RankingPDSInfo[] DataRankingPDS;
+
         public List<ZonasInfo> Zonas;
         public List<SupervisoresInfo> Supervisores;
-
+        
         public List<ZonasInfo> RecuperarDataResumenZonas()
         {
             try
@@ -88,6 +89,38 @@ namespace IntranetLoteriaNacional.Data
                     }
                 }
                 return Supervisores;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        public List<RankingPDSInfo> RecuperarRankingPDS()
+        {
+            try
+            {
+                EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerRankingPDS;
+
+                var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                request.Accept = "application/json";
+
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (Stream strReader = response.GetResponseStream())
+                    {
+                        if (strReader == null) return new List<RankingPDSInfo>();
+                        using (StreamReader objReader = new StreamReader(strReader))
+                        {
+                            string responseBody = objReader.ReadToEnd();
+                            var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
+                            DataRankingPDS = JsonConvert.DeserializeObject<RankingPDSInfo[]>(bobyRespuesta.Body)!;
+                            
+                        }
+                    }
+                }
+                return DataRankingPDS.ToList();
             }
             catch (Exception ex)
             {

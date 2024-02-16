@@ -12,4 +12,12 @@
         public string PDS { get; set; }
         public int CuestionariosNovedades { get; set; }
     }
+
+    public class RankingPDSInfo
+    {
+        public int codigoPDS { get; set; }
+        public string nombrePDS { get; set; }
+        public int cantidadFormularios { get; set; }
+        public decimal porcentajeCumplimiento { get; set; }
+    }
 }

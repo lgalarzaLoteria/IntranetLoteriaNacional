@@ -149,6 +149,21 @@
 
         try
         {
+            if (aplicacionDTOForm.nombreAplicacion == null || aplicacionDTOForm.nombreAplicacion == string.Empty)
+            {
+                await loader.Close();
+                mensajeTransaccion = "El nombre de la aplicación debe ser ingresado";
+                iconoMostrar = "error";
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = mensajeTransaccion,
+                        Icon = iconoMostrar
+                    });
+                return;
+            }
+
             aplicacionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
             aplicacionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
 

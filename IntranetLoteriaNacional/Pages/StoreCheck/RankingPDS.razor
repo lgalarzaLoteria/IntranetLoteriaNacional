@@ -1,0 +1,178 @@
+﻿@page "/StoreCheck/RankingPDS"
+
+@using System.Drawing
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Data
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using Syncfusion.Blazor.Charts
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+@inject StoreCheckService StoreService
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+<article class="art">
+    <h1 class="tituloPagina">Ranking de Cumplimiento por PDS</h1>
+    <div>
+        <SfAccumulationChart Title="PDS Lotería Nacional" EnableAnimation="false">
+            <AccumulationChartEvents OnPointClick="PointClick"></AccumulationChartEvents>
+            <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
+            <AccumulationChartLegendSettings Visible="false"></AccumulationChartLegendSettings>
+            <AccumulationChartSeriesCollection>
+                <AccumulationChartSeries DataSource="@ranking" XName="nombrePDS" YName="porcentajeCumplimiento"
+                                         Type="AccumulationType.Funnel" Explode="false" GapRatio="0.03" Height="80%" Width="90%" NeckWidth="25%" NeckHeight="18%">
+                    <AccumulationDataLabelSettings Visible="true" Name="DataLabelMappingName" Position="AccumulationLabelPosition.Inside">
+                        <AccumulationChartConnector Length="10px"></AccumulationChartConnector>
+                        <AccumulationChartDataLabelFont Size="30px" FontWeight="600"></AccumulationChartDataLabelFont>
+                    </AccumulationDataLabelSettings>
+                </AccumulationChartSeries>
+            </AccumulationChartSeriesCollection>
+        </SfAccumulationChart>
+         <PhModal @ref="modalResumen">
+            <Title>Cantidad Cuestionarios por PDS</Title>
+            <Body>
+                <PhTable @ref="_table1" TPost="RankingPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@cuestionario" EndPoint="@EndPointStr">
+                    <PhTableColumnHeaders>
+                        <PhTableColumn Style="width:30%;" Value="PDS" IsHeader="true" />
+                        <PhTableColumn Style="width:30%;" Value="Cantidad Cuestionarios" IsHeader="true" />
+                        <PhTableColumn Style="width:30%;" Value="Porcentaje Cumplimiento" IsHeader="true" />
+                    </PhTableColumnHeaders>
+                    <PhTableColumnValues>
+                        <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
+                        <PhTableColumn Value="@Convert.ToString(context.cantidadFormularios)" Style="width:30%;" />
+                        <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:30%;" />
+                    </PhTableColumnValues>
+                    <PhTableActions>
+                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                    </PhTableActions>
+                </PhTable>
+                <PhModal @ref="modalCuestionarios">
+                    <Title>Cuestionarios y su porcentaje de cumplimiento en PDS</Title>
+                    <Body>
+                        <PhTable @ref="_table2" TPost="CalificacionCuestionariosPDSDTO" isSearcheable="false" isRefresh="false" TReturn="CalificacionCuestionariosPDSDTO" Body="@pds" EndPoint="@EndPointCuestionarios">
+                            <PhTableColumnHeaders>
+                                <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
+                                <PhTableColumn Style="width:20%;" Value="Porcentaje de Cumplimiento" IsHeader="true" />
+                            </PhTableColumnHeaders>
+                            <PhTableColumnValues>
+                                <PhTableColumn Value="@context.codigoFormulario.ToString()" Style="width:20%;" />
+                                <PhTableColumn Value="@context.porcentajeCumplimiento.ToString()" Style="width:20%;" />
+                            </PhTableColumnValues>
+                        </PhTable>
+                    </Body>
+                    <Footer>
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    </Footer>
+                </PhModal>
+            </Body>
+            <Footer>
+                <PhButton Type="ButtonType.Danger" @onclick="() => modalResumen.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+            </Footer>
+         </PhModal>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+@code {
+    Loading loader { get; set; } = new();
+    private string EndPointStr { get; set; } = null!;
+    private string EndPointCuestionarios { get; set; } = null!;
+    private List<RankingPDSInfo>? ranking;
+    private List<RankingPDSInfo>? resumenFormulariosPDS;
+    private PhModal? modalResumen { get; set; } = new();
+    private PhModal? modalCuestionarios { get; set; } = new();
+    private int codigoPDS { get; set; } = 0;
+    private string nombrePDS = string.Empty;
+    private string tituloResumenFormulariosPDS = string.Empty; 
+    private PhTable<RankingPDSInfo, RankingPDSInfo>? _table1 = new();
+    private PhTable<CalificacionCuestionariosPDSDTO, CalificacionCuestionariosPDSDTO>? _table2 = new();
+    private RankingPDSInfo cuestionario;
+    CalificacionCuestionariosPDSDTO pds { get; set; } = null!;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./StoreCheck/RankingPDS", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+        }
+    }
+    protected override async void OnInitialized()
+    {
+        try
+        {
+            ranking = StoreService.RecuperarRankingPDS();
+        }
+        catch (Exception ex)
+        {
+            ranking = new List<RankingPDSInfo>();
+        }
+    }
+    private async void PointClick(AccumulationPointEventArgs args)
+    {
+        try
+        {
+            // nombrePDS = args.Point.X.ToString();
+            // tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
+            //resumenFormulariosPDS = ranking.Where(dt => dt.nombrePDS == nombrePDS).ToList();
+            _table1.Data = ranking.OrderByDescending(se => se.porcentajeCumplimiento).ToArray();
+            await modalResumen.NewModal();
+        }
+        catch (Exception ex)
+        {
+            resumenFormulariosPDS = new List<RankingPDSInfo>();
+        }
+    }
+    private async Task VerCuestionarios(RankingPDSInfo dato)
+    {
+        try
+        {
+            codigoPDS = int.Parse(dato.codigoPDS.ToString());
+            nombrePDS = dato.nombrePDS;
+            EndPointCuestionarios = EndPoints.obtenerCalificacioCustionariosporPDS;
+
+            CalificacionCuestionariosPDSDTO datoConsultar = new CalificacionCuestionariosPDSDTO();
+            datoConsultar.codigoPDS = codigoPDS;
+            datoConsultar.nombrePDS = nombrePDS;
+
+            var result = await _httpClient.PostAsJsonAsync<CalificacionCuestionariosPDSDTO>
+               (EndPointCuestionarios, datoConsultar);
+
+            _table2.Data = result;
+            await modalCuestionarios.NewModal();
+        }
+        catch (Exception ex)
+        {
+            dato = new RankingPDSInfo();
+        }
+    }
+
+}

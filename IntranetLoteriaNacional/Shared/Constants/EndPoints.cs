@@ -28,6 +28,8 @@
         public static string obtenerResumenGerencialZonas = "StoreCheck/ObtieneResumenGerencialZonas";
         public static string consultarFormularioConNovedades = "StoreCheck/ConsultarFormularioConNovedades";
         public static string revisarCuestionario = "StoreCheck/RevisarFormulario";
+        public static string obtenerRankingPDS = "StoreCheck/ObtieneRankingPDS";
+        public static string obtenerCalificacioCustionariosporPDS = "StoreCheck/ObtieneCalificacioCustionariosporPDS";
 
         #endregion
 
