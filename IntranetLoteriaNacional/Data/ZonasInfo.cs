@@ -20,4 +20,10 @@
         public int cantidadFormularios { get; set; }
         public decimal porcentajeCumplimiento { get; set; }
     }
+
+    public class RankingCumplimientoPDSInfo
+    {
+        public int grupo { get; set; }
+        public string cantidadPDS { get; set; }
+    }
 }

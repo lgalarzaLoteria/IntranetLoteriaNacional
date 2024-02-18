@@ -7,6 +7,8 @@ using LoteriaNacionalDominio;
 using Newtonsoft.Json;
 using System.Net;
 using System.Security.Policy;
+using RestSharp;
+using IntranetLoteriaNacional.Pages;
 
 
 namespace IntranetLoteriaNacional.Data
@@ -16,11 +18,12 @@ namespace IntranetLoteriaNacional.Data
         private string EndPointStr { get; set; } = null!;
         ResumenGerencialZonasDTO resumen;
         ResumenGerencialZonasDTO[] Data;
-        RankingPDSInfo[] DataRankingPDS;
+        RankingCumplimientoPDSInfo[] DataRankingPDS;
 
         public List<ZonasInfo> Zonas;
         public List<SupervisoresInfo> Supervisores;
-        
+        public List<CalificacionCuestionariosPDSDTO>? pdsPorRango;
+
         public List<ZonasInfo> RecuperarDataResumenZonas()
         {
             try
@@ -95,7 +98,7 @@ namespace IntranetLoteriaNacional.Data
                 throw new Exception(ex.Message.ToString());
             }
         }
-        public List<RankingPDSInfo> RecuperarRankingPDS()
+        public List<RankingCumplimientoPDSInfo> RecuperarRankingPDS()
         {
             try
             {
@@ -110,17 +113,53 @@ namespace IntranetLoteriaNacional.Data
                 {
                     using (Stream strReader = response.GetResponseStream())
                     {
-                        if (strReader == null) return new List<RankingPDSInfo>();
+                        if (strReader == null) return new List<RankingCumplimientoPDSInfo>();
                         using (StreamReader objReader = new StreamReader(strReader))
                         {
                             string responseBody = objReader.ReadToEnd();
                             var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
-                            DataRankingPDS = JsonConvert.DeserializeObject<RankingPDSInfo[]>(bobyRespuesta.Body)!;
+                            DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(bobyRespuesta.Body)!;
                             
                         }
                     }
                 }
                 return DataRankingPDS.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+
+        public List<CalificacionCuestionariosPDSDTO> RecuperarPDSPorRangoCumplimiento(string rangoCumplimientoPDS)
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
+                RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
+                datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
+                datoConsultar.cantidadPDS = "0";
+                var jsonEnviar = JsonConvert.SerializeObject(datoConsultar);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtienePDSPorRangoCumplimiento");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<CalificacionCuestionariosPDSDTO[]>(returnType.Body)!;
+                        pdsPorRango = ret.ToList();
+                    }
+                }
+
+             return pdsPorRango;
             }
             catch (Exception ex)
             {
