@@ -3,38 +3,38 @@
 
 @inject ILocalStorageService _session
 
-<div class="top-row ps-3 navbar navbar-dark" style="background-color:#021151">
-    <div class="container-fluid" style="background-color:#021151">
-        <div style="padding: 20px; background-color: #021151;">
-            <img style="width: 170px" src="./images/logo_footer.png" />
+<div class="top-row ps-3 navbar navbar-dark" style="background-color:var(--ph-skyblue)">
+    <div class="container-fluid" style="background-color:var(--ph-skyblue)">
+        <div style="padding: 20px; background-color: var(--ph-skyblue);">
+            <img style="width: 150px" height="40px" src="./images/loterialogo.png" />
         </div>
         <b/>
         <b />
         <b />
         <b />
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu" style="background-color:#021151">
-            <span class="navbar-toggler-icon" style="background-color:#021151"></span>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu" style="background-color:var(--ph-skyblue)">
+            <span class="navbar-toggler-icon" style="background-color:var(--ph-skyblue)"></span>
         </button>
     </div>
 </div>
  
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu" style="background-color:#021151">
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu" style="background-color:var(--ph-skyblue)">
     @if(menuList==null)
     {
         <p><em>Cargando....</em></p>
     }
     else
     {
-        <ul class="nav flex-column" style="background-color:#021151">
+        <ul class="nav flex-column" style="background-color:var(--ph-skyblue)">
              
             @foreach(var funcion in funcionList)
             {
-                <li class="nav-item px-3" style="background-color:#021151">
+                <li class="nav-item px-3" style="background-color:var(--ph-skyblue)">
                     <NavLink class="nav-link" @onclick="()=>GetIsClicked(funcion)">
                         <span aria-hidden="true"></span>@funcion.nombreFuncion
                     </NavLink>
                 </li>
-                <ul class="nav flex-column" style="background-color:#021151">
+                <ul class="nav flex-column" style="background-color:var(--ph-skyblue)">
                     @foreach (var transaccion in menuList.Where(t=>t.codigoFuncion.Equals(funcion.codigoFuncion)).Select(t=> new {t.codigoTransaccion, t.nombreTransaccion, t.urlPagina}).ToList())
                     {
                         @if (expanSubNav && funcion.codigoFuncion == clickedMenu)

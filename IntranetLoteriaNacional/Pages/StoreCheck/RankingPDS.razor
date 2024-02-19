@@ -188,7 +188,7 @@
         }
         catch (Exception ex)
         {
-            resumenFormulariosPDS = new List<RankingPDSInfo>();
+            //resumenFormulariosPDS = new List<RankingPDSInfo>();
         }
     }
     private async Task VerDetallePDS(RankingPDSInfo dato)
@@ -197,15 +197,26 @@
         {
             nombrePDS = dato.nombrePDS;             
             tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
+            
+            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
+            RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
+            datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
+            datoConsultar.cantidadPDS = "0";
+
+            var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
+               (EndPointPDSPorRango, datoConsultar);
+
+            resumenFormulariosPDS = result.ToList();
             resumenFormulariosPDS = resumenFormulariosPDS.Where(dt => dt.nombrePDS == nombrePDS).ToList();
                      
             _table1.Data = resumenFormulariosPDS.ToArray();
 
             await modalResumen.NewModal();
+            
         }
         catch (Exception ex)
         {
-            resumenFormulariosPDS = new List<RankingPDSInfo>();
+            //resumenFormulariosPDS = new List<RankingPDSInfo>();
         }
     }
     private async Task VerCuestionarios(RankingPDSInfo dato)
