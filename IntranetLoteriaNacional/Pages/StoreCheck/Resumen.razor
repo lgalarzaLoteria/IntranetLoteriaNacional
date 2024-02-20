@@ -8,10 +8,9 @@
 @using IntranetLoteriaNacional.Shared.Constants
 @using IntranetLoteriaNacional.Validate
 @using LoteriaNacionalDominio
-@using Syncfusion.Blazor.Charts
+@* @using Syncfusion.Blazor.Charts *@
 @using static LoteriaNacionalDominio.StoreCheckDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
-
 
 @inject ProjectHttpClient _httpClient
 @inject ILocalStorageService _session
@@ -35,20 +34,23 @@
 <article class="art">
     <h1 class="tituloPagina">Cuestionarios con Novedades por Zona</h1>
     <div>
-        <SfChart>
-            <ChartEvents OnAxisLabelClick="AxisLabelClickEvent"></ChartEvents>
-            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"></ChartPrimaryXAxis>
-            <ChartPrimaryYAxis Title="Cuestionarios con Novedades"></ChartPrimaryYAxis>
-            <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
-            <ChartLegendSettings Visible="true"></ChartLegendSettings>
-            <ChartSeriesCollection>
-                <ChartSeries DataSource="@zonas" XName="Zona" YName="CuestionariosNovedades" Type="ChartSeriesType.Column" Fill="var(--ph-skyblue)">
-                    <ChartMarker>
-                        <ChartDataLabel Visible="true"></ChartDataLabel>
-                    </ChartMarker>
-                </ChartSeries>
-            </ChartSeriesCollection>
-        </SfChart>
+        <DxChart T="ZonasInfo" Data="@zonas" Width="100%">
+            <DxChartTitle Text="Cuestionarios con Novedades"></DxChartTitle>
+            <DxChartBarSeries T="ZonasInfo"
+                              TArgument="string"
+                              TValue="int"
+                              ArgumentField="zonas => zonas.Zona"
+                              ValueField="zonas => zonas.CuestionariosNovedades">
+                <DxChartLegend Visible="false" />
+                <DxChartTooltip Enabled="true"
+                                Position="RelativePosition.Outside">
+                    <div style="margin: 0.75rem">
+                        <div class="fw-bold">@context.Point.Argument</div>
+                        <div>Cuestionarios con novedades: @context.Point.Value</div>
+                    </div>
+                </DxChartTooltip>
+            </DxChartBarSeries>
+        </DxChart>
         <PhModal @ref="modalResumen">
             <Title>Resumen por Supervisor</Title>
             <Body>
