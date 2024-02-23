@@ -98,6 +98,10 @@
 
             if(existeUsuario!=null)
             {
+                var respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login);
+
+                string rolUsuario = respuestaRolUsuario[0].nombreRol;
+
                 await _session.SetItemAsync("nombreUsuario", existeUsuario[0].NombreUsuario);
                 await _session.SetItemAsync("codigoUsuario", login.UserName);
                 IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());// objeto para guardar la ip
@@ -126,7 +130,26 @@
                 else
                 {
                     await _session.SetItemAsync<MenuDTO[]>("_userMenu", menuUsuario);
-                    _navigation.NavigateTo("./Home/Home");
+                    switch (rolUsuario)
+                    {
+                        case "Comisionista":
+                            _navigation.NavigateTo("./StoreCheck/Cuestionario");
+                            break;
+                        case "Supervisor PDS":
+                            _navigation.NavigateTo("./StoreCheck/Revision");
+                            break;
+                            // case "Jefe Ventas":
+                            // code block
+                            break;
+                        case "Gerencia":
+                            _navigation.NavigateTo("./StoreCheck/Resumen");
+                            break;
+                        default:
+                            _navigation.NavigateTo("./Home/Home");
+                            break;
+                    }
+                    
+                    
                 }
 
             }

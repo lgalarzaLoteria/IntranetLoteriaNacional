@@ -8,7 +8,7 @@
 @using IntranetLoteriaNacional.Shared.Constants
 @using IntranetLoteriaNacional.Validate
 @using LoteriaNacionalDominio
-@using Syncfusion.Blazor.Charts
+@* @using Syncfusion.Blazor.Charts *@
 @using static LoteriaNacionalDominio.StoreCheckDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
 
@@ -33,7 +33,7 @@
 <article class="art">
     <h1 class="tituloPagina">Ranking de Cumplimiento por PDS</h1>
     <div>
-        <SfAccumulationChart Title="PDS por rango de cumplimiento" EnableAnimation="false">
+        @* <SfAccumulationChart Title="PDS por rango de cumplimiento" EnableAnimation="false">
             <AccumulationChartEvents OnPointClick="PointClick"></AccumulationChartEvents>
             <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
             <AccumulationChartLegendSettings Visible="false"></AccumulationChartLegendSettings>
@@ -46,7 +46,7 @@
                     </AccumulationDataLabelSettings>
                 </AccumulationChartSeries>
             </AccumulationChartSeriesCollection>
-        </SfAccumulationChart>
+        </SfAccumulationChart> *@
         <PhModal @ref="modalPdsRango">
             <Title>PDS por Rango de Cumplimiento</Title>
             <Body>
@@ -162,35 +162,35 @@
             ranking = new List<RankingCumplimientoPDSInfo>();
         }
     }
-    private async void PointClick(AccumulationPointEventArgs args)
-    {
-        try
-        {
-            //nombrePDS = args.Point.X.ToString();
-            // tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
-            //resumenFormulariosPDS = ranking.Where(dt => dt.nombrePDS == nombrePDS).ToList();
-            rangoCumplimientoPDS = args.Point.Label.ToString();
-            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
-            RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
-            datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
-            datoConsultar.cantidadPDS = "0";
+    // private async void PointClick(AccumulationPointEventArgs args)
+    // {
+    //     try
+    //     {
+    //         //nombrePDS = args.Point.X.ToString();
+    //         // tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
+    //         //resumenFormulariosPDS = ranking.Where(dt => dt.nombrePDS == nombrePDS).ToList();
+    //         rangoCumplimientoPDS = args.Point.Label.ToString();
+    //         EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
+    //         RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
+    //         datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
+    //         datoConsultar.cantidadPDS = "0";
 
-            var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
-               (EndPointPDSPorRango, datoConsultar);
+    //         var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
+    //            (EndPointPDSPorRango, datoConsultar);
 
-            _tablePDS.Data = result;
-            resumenFormulariosPDS = result.ToList();
+    //         _tablePDS.Data = result;
+    //         resumenFormulariosPDS = result.ToList();
 
-            //pdsPorRango = StoreService.RecuperarPDSPorRangoCumplimiento(rangoCumplimientoPDS);
-            //Por el momento muestro en tabla
+    //         //pdsPorRango = StoreService.RecuperarPDSPorRangoCumplimiento(rangoCumplimientoPDS);
+    //         //Por el momento muestro en tabla
 
-            await modalPdsRango.NewModal();
-        }
-        catch (Exception ex)
-        {
-            //resumenFormulariosPDS = new List<RankingPDSInfo>();
-        }
-    }
+    //         await modalPdsRango.NewModal();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         //resumenFormulariosPDS = new List<RankingPDSInfo>();
+    //     }
+    // }
     private async Task VerDetallePDS(RankingPDSInfo dato)
     {
         try

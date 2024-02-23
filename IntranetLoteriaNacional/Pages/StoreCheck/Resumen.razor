@@ -126,7 +126,7 @@
                                             <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="NO CUMPLE" />
                                         }
                                         <PhTableColumn StatusColor="var(--ph-red)" Value="@context.descripcionNovedad" Style="width:20%;" />
-                                        <PhTableColumn Value="@context.fechaRevision?.ToString()" Style="width:30%;" />
+                                        <PhTableColumn Value="@context.fechaRevisionSupervisor?.ToString()" Style="width:30%;" />
                                     </PhTableColumnValues>
                                 </PhTable>
                             </Body>
@@ -193,26 +193,26 @@
             resumen = new ResumenGerencialZonasDTO();
         }
     }
-    private async void AxisLabelClickEvent(AxisLabelClickEventArgs args)
-    {
-        try
-        {
-            nombreZona = args.Text;
-            supervisor = new ResumenGerencialZonasDTO();
-            EndPointStr = EndPoints.obtenerResumenGerencialZonas;
-            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
-               (EndPointStr, supervisor);
+    // private async void AxisLabelClickEvent(AxisLabelClickEventArgs args)
+    // {
+    //     try
+    //     {
+    //         nombreZona = args.Text;
+    //         supervisor = new ResumenGerencialZonasDTO();
+    //         EndPointStr = EndPoints.obtenerResumenGerencialZonas;
+    //         var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+    //            (EndPointStr, supervisor);
 
-            _table1.Data = result.Where(dt => dt.nombreZona == nombreZona).ToArray();
+    //         _table1.Data = result.Where(dt => dt.nombreZona == nombreZona).ToArray();
 
 
-            await modalResumen.NewModal();
-        }
-        catch (Exception ex)
-        {
-            resumen = new ResumenGerencialZonasDTO();
-        }
-    }
+    //         await modalResumen.NewModal();
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         resumen = new ResumenGerencialZonasDTO();
+    //     }
+    // }
     private async Task VerCuestionarios(ResumenGerencialZonasDTO dato)
     {
         try

@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <div class="form-group row" style="margin-bottom:2%;">
-                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">% Calificación</label>
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">% Para la Calificación</label>
                     <div class="col-sm-10">
                         <input type="number"  min="0" max="100" id="det" @bind-value="seccionDTOForm.porcentajeCalificacion" placeholder="Ingrese el porcentaje para la calificación">
                     </div>
@@ -85,10 +85,12 @@
                  })">
             <PhTableColumnHeaders>
                 <PhTableColumn Style="width:40%;" Value="Nombre Sección" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="% para la Calificación" IsHeader="true" />
                 <PhTableColumn Style="width:20%;" Value="Estado de la Sección" IsHeader="true" />
             </PhTableColumnHeaders>
             <PhTableColumnValues>
                 <PhTableColumn Value="@context.nombreSeccion" Style="width:40%;" />
+                <PhTableColumn Value="@context.porcentajeCalificacion.ToString()" Style="width:20%;" />
                 @if (context.estadoSeccion == true)
                 {
                     <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoSeccion" />

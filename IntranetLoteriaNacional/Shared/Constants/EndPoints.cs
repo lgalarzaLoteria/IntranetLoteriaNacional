@@ -4,6 +4,7 @@
     {
         #region EndPoints Seguridad
         public static string validarUsuario = "Seguridad/Login";
+        public static string obtieneRolUsuario = "Seguridad/ObtieneRolUsuario";
         public static string obtieneMenuUsuario = "Seguridad/ObtieneMenuUsuario";
         public static string verificarPermisos = "Seguridad/MantenimientoObtienePermiso";
         #endregion
@@ -27,10 +28,11 @@
         public static string consultarFormularioIngresado = "StoreCheck/ConsultarFormularioIngresado";
         public static string obtenerResumenGerencialZonas = "StoreCheck/ObtieneResumenGerencialZonas";
         public static string consultarFormularioConNovedades = "StoreCheck/ConsultarFormularioConNovedades";
-        public static string revisarCuestionario = "StoreCheck/RevisarFormulario";
+        public static string revisarCuestionarioSupervisor = "StoreCheck/RevisarFormularioSupervisor";
         public static string obtenerRankingPDS = "StoreCheck/ObtieneRankingPDS";
         public static string obtenerPDSPorRangoCumplimiento = "StoreCheck/ObtienePDSPorRangoCumplimiento";
         public static string obtenerCalificacioCustionariosporPDS = "StoreCheck/ObtieneCalificacioCustionariosporPDS";
+        public static string obtenerRankingPDSPorSupervisor = "StoreCheck/ObtieneRankingPDSPorSupervisor";
 
         #endregion
 

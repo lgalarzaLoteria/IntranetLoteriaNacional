@@ -1,6 +1,7 @@
 ﻿@page "/StoreCheck/Revision"
 
 @using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Data
 @using IntranetLoteriaNacional.Shared.ComponentModels
 @using IntranetLoteriaNacional.Shared.Modals
 @using IntranetLoteriaNacional.Shared.Constants
@@ -9,11 +10,16 @@
 @using static LoteriaNacionalDominio.StoreCheckDTO
 @using static LoteriaNacionalDominio.MantenimientoDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
+@using C1.Chart
+@using C1.Blazor.Chart
+
+
 
 @inject ProjectHttpClient _httpClient
 @inject ILocalStorageService _session
 @inject NavigationManager _navigation
 @inject SweetAlertService Swal
+@inject StoreCheckService StoreService
 
 <style>
     .column {
@@ -29,38 +35,54 @@
 </style>
 
 <article class="art">
-    <h1 class="tituloPagina">Resumen por PDS</h1>
+    <h1 class="tituloPagina">Área de trabajo Supervisor</h1>
     <div>
-        <br />
-        <PhTable @ref="_table" TPost="LoginDTO" isRefresh="true" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor"
-                 SearchDefinition="@(new[]
-                 {
-                    "codigoZona",
-                    "nombreZona",
-                    "codigoPDS",
-                    "nombrePDS",
-                    "CuestionariosPendientes"
-                 })">
+        <div class="row" style="align-content:center">
+            <p align="center" style="color: black">Pendientes de revisión</p>
+        </div>
+        <PhTable @ref="_table" TPost="LoginDTO" isSearcheable="false" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor">
             <PhTableColumnHeaders>
-                @* <PhTableColumn Style="width:0%;visibility:collapse" Value="Codigo Zona" IsHeader="true" /> *@
                 <PhTableColumn Style="width:30%;" Value="Nombre Zona" IsHeader="true" />
-                @* <PhTableColumn Style="width:0%;visibility:collapse" Value="Codigo PDS" IsHeader="true" /> *@
                 <PhTableColumn Style="width:50%;" Value="Nombre PDS" IsHeader="true" />
                 <PhTableColumn Style="width:20%;" Value="Cuestionarios Pendientes" IsHeader="true" />
             </PhTableColumnHeaders>
             <PhTableColumnValues>
-                @* <PhTableColumn Value="@Convert.ToString(context.codigoZona)" Style="width:0%;visibility:collapse" /> *@
                 <PhTableColumn Value="@context.nombreZona" Style="width:30%;text-align:center;vertical-align:middle;" />
-                @* <PhTableColumn Value="@Convert.ToString(context.codigoPDS)" Style="width:0%;visibility:collapse" /> *@
                 <PhTableColumn Value="@context.nombrePDS" Style="width:50%;" />
                 <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
             </PhTableColumnValues>
             <PhTableActions>
                 <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
-
             </PhTableActions>
 
         </PhTable>
+        <div class="row">
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                           HeaderContent="Cuestionarios Revisados" HeaderStyle="font-size:15px"
+                           LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
+                           BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
+                    <SeriesCollection>
+                        <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
+                    </SeriesCollection>
+                </FlexChart>
+            </div>
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
+                           HeaderContent="Ranking Cumplimiento PDS" HeaderStyle="font-size:15px">
+                    <SeriesCollection>
+                        <Series Binding="grupo"></Series>
+                    </SeriesCollection>
+                    <AxisCollection>
+                        <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                        <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                    </AxisCollection>
+                    <Label>
+                        <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                    </Label>
+                </FlexChart>
+            </div>
+        </div>
         <PhNotification @ref="@modalNotification">
         </PhNotification>
 
@@ -102,60 +124,42 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-sm-6" style="text-align:center">
-                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Pregunta</label>
+                            <div class="col-sm-9" style="left:auto">
+                                <label for="det" class="col-sm-9 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Pregunta</label>
                             </div>
-                            <div class="col-sm-2" style="text-align:center">
-                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Comisionista</label>
+                            <div class="col-sm-1" style="text-align:center">
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Si</label>
                             </div>
-                            <div class="col-sm-2" style="text-align:left">
-                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Respuesta Supervisor</label>
-                            </div>
-                            <div class="col-sm-2" style="text-align:left">
-                                <label for="det" class="col-sm-1 col-form-label col-form-label-md" style="color:var(--ph-skyblue)">Motivo</label>
+                            <div class="col-sm-1" style="text-align:center">
+                                <label for="det" class="col-sm-1 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">No</label>
                             </div>
                         </div>
                         <ul class="nav flex-column">
                             @if (DataSeccion != null)
                             {
+                                int count = 1;
                                 @foreach (var seccion in DataSeccion)
                                 {
                                     <li class="nav-item">
                                         <NavLink class="nav-link">
                                             <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
-                                            @{ string nombrePanel = "nav" + seccion.nombreSeccion; }
+                                            @{
+                                                string nombrePanel = "nav" + seccion.nombreSeccion;
+                                            }
                                             <table class="table">
                                                 <tbody>
-                                                    @{
-                                                        int count = 0;
-                                                    }
                                                     @if (preguntasList != null)
                                                     {
-                                                        string nombreGrupo = "nombreGrupo" + count.ToString();
                                                         foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
                                                         {
-                                                            <tr name="nombreGrupo">
-                                                                <td>@pregunta.descripcionPregunta.Trim()</td>
-                                                                <td width="50px" style="text-align:center">
-                                                                    <input style="align-content:center" type="checkbox" @bind-value="pregunta.respuesta" checked="@pregunta.respuesta" disabled="True" />
+                                                            string nombreRadioButton = "radio" + count.ToString();
+                                                            <tr>
+                                                                <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                <td width="4%">
+                                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = true)" />
                                                                 </td>
-                                                                <td width="50px" style="text-align:center">
-                                                                    <input style="align-content:center" type="checkbox" @bind-value="pregunta.presentaNovedad" checked="@pregunta.presentaNovedad" />
-                                                                </td>
-                                                                <td>
-                                                                    @* <select class="form-select" aria-label="Default select example" style="width:100px">
-                                                                        <option value="0" selected>Seleccione una novedad</option>
-                                                                        <option value="1">Equipo no esta en buen estado</option>
-                                                                        <option value="2">No expone los productos a la vista del cliente</option>
-                                                                        <option value="3">No cumple</option>
-                                                                    </select> *@
-                                                                    <select class="form-control" @bind="@pregunta.codigoNovedad" style="width:380px">
-                                                                        <option value=""></option>
-                                                                        @foreach (var novedad in novedadesList)
-                                                                        {
-                                                                            <option value="@novedad.codigoNovedad"> @novedad.descripcionNovedad </option>
-                                                                        }
-                                                                    </select>
+                                                                <td width="6%">
+                                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = false)" />
                                                                 </td>
                                                             </tr>
                                                             count++;
@@ -214,19 +218,34 @@
     string iconoMostrar = string.Empty;
     NovedadesDTO novedades = new NovedadesDTO();
     NovedadesDTO dtSelectnovedad = null;
+    public List<ZonasPorSupervisorDTO>? cuestionariosPendientesZona;
+    List<ResumenGerencialZonasDTO>? cuestionariosRevisadosPDSSupervisor;
+    List<RankingCumplimientoPDSInfo> dataRankingPDS;
 
     protected override async void OnInitialized()
     {
         EndPointStr = EndPoints.obtieneZonasPorSupervisor;
-        
+
         try
         {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = "fmorla";
             login = new LoginDTO();
-            login.UserName = "fmorla";//await _session.GetItemAsync<string>("codigoUsuario");
-            var result = await _httpClient.PostAsJsonAsync<ZonasPorSupervisorDTO>
-               (EndPointStr, login);
+            login.UserName = "fmorla";
+            login.Password = string.Empty;
 
-            _table.Data = result;
+            //await _session.GetItemAsync<string>("codigoUsuario");
+            // var result = await _httpClient.PostAsJsonAsync<ZonasPorSupervisorDTO>
+            //    (EndPointStr, login);
+
+            // _table.Data = result;
+
+            cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonas(login);
+
+            cuestionariosRevisadosPDSSupervisor = StoreService.ObtieneFormulariosRevisadosPDSPorSupervisor(datoEnviar);
+
+            dataRankingPDS = StoreService.RecuperarRankingPDSSupervisor(datoEnviar);
+
 
             novedadesList = await _httpClient.PostAsJsonAsync<NovedadesDTO>(EndPoints.obtenerNovedades, novedades);
             if (novedadesList == null)
@@ -277,11 +296,8 @@
             foreach (var item in preguntasList)
             {
                 RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
-                if (item.presentaNovedad == null)
-                    item.presentaNovedad = false;
-
-                if (item.respuesta == null)
-                    item.respuesta = false;
+                if (item.respuestaSupervisor == null)
+                    item.respuestaSupervisor = false;
 
                 datoEnviar.codigoRegistro = item.codigoRegistro;
                 datoEnviar.codigoFormulario = item.codigoFormulario;
@@ -289,11 +305,11 @@
                 datoEnviar.codigoPDS = item.codigoPDS;
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
-                datoEnviar.respuesta = item.respuesta;
-                datoEnviar.codigoSupervisor = "8";//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
-                datoEnviar.presentaNovedad = item.presentaNovedad;
-                datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
-                datoEnviar.fechaRevision = DateTime.Now.ToString("yyyy-MM-dd");
+                datoEnviar.respuestaSupervisor = item.respuestaSupervisor;
+                datoEnviar.codigoSupervisor = "fmorla";//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
+                                                       //datoEnviar.presentaNovedad = item.presentaNovedad;
+                                                       //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
+                datoEnviar.fechaRevisionSupervisor = DateTime.Now.ToString("yyyy-MM-dd");
                 datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
                 datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt"));
@@ -303,7 +319,7 @@
 
             listaEnviar.registro = registro;
 
-            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionario)
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionarioSupervisor)
                 {
                     Content = JsonContent.Create(listaEnviar)
                 };
@@ -341,7 +357,7 @@
                     Icon = iconoMostrar
                 });
 
-            //this.OnInitialized();
+
         }
         catch (HttpRequestException e)
         {
@@ -413,6 +429,34 @@
         {
 
             formulario = new FormulariosporPOSDTO();
+        }
+    }
+
+    private async void HandleSelectionChanged()
+    {
+        try
+        {
+            string prueba = "HOLA";
+
+            // codigoPDS = Convert.ToInt32(((LoteriaNacionalDominio.StoreCheckDTO.ZonasPorSupervisorDTO[])args.Point.DataItems)[0].codigoPDS);
+            // nombrePDS = ((LoteriaNacionalDominio.StoreCheckDTO.ZonasPorSupervisorDTO[])args.Point.DataItems)[0].nombrePDS;
+            // ZonasPorSupervisorDTO dato = new ZonasPorSupervisorDTO();
+            // dato.codigoPDS = codigoPDS;
+            // dato.nombrePDS = nombrePDS;
+
+
+            // EndPointCuestionarios = EndPoints.consultarFormulariosporPOS;
+
+            // var result = await _httpClient.PostAsJsonAsync<FormulariosporPOSDTO>
+            //    (EndPointCuestionarios, dato);
+
+            // _table1.Data = result;
+            // await modalCuestionarios.NewModal();
+            
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
         }
     }
 
