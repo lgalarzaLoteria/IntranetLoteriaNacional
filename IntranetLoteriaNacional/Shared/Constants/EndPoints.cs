@@ -30,9 +30,10 @@
         public static string consultarFormularioConNovedades = "StoreCheck/ConsultarFormularioConNovedades";
         public static string revisarCuestionarioSupervisor = "StoreCheck/RevisarFormularioSupervisor";
         public static string obtenerRankingPDS = "StoreCheck/ObtieneRankingPDS";
+        public static string obtenerRankingPDSPorSupervisor = "StoreCheck/ObtieneRankingPDSPorSupervisor";
+        public static string obtieneRevisadosPorSupervisor = "StoreCheck/ObtieneRevisadosPorSupervisor";
         public static string obtenerPDSPorRangoCumplimiento = "StoreCheck/ObtienePDSPorRangoCumplimiento";
         public static string obtenerCalificacioCustionariosporPDS = "StoreCheck/ObtieneCalificacioCustionariosporPDS";
-        public static string obtenerRankingPDSPorSupervisor = "StoreCheck/ObtieneRankingPDSPorSupervisor";
 
         #endregion
 

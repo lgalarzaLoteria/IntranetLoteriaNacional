@@ -12,14 +12,15 @@
 @using static LoteriaNacionalDominio.SeguridadDTO
 @using C1.Chart
 @using C1.Blazor.Chart
-
-
+@using C1.Blazor.DateTimeEditors
+@using C1.Blazor.Input
 
 @inject ProjectHttpClient _httpClient
 @inject ILocalStorageService _session
 @inject NavigationManager _navigation
 @inject SweetAlertService Swal
 @inject StoreCheckService StoreService
+@inject IJSRuntime JSRuntime
 
 <style>
     .column {
@@ -54,38 +55,7 @@
             <PhTableActions>
                 <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
             </PhTableActions>
-
         </PhTable>
-        <div class="row">
-            <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
-                           HeaderContent="Cuestionarios Revisados" HeaderStyle="font-size:15px"
-                           LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
-                           BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
-                    <SeriesCollection>
-                        <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
-                    </SeriesCollection>
-                </FlexChart>
-            </div>
-            <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
-                           HeaderContent="Ranking Cumplimiento PDS" HeaderStyle="font-size:15px">
-                    <SeriesCollection>
-                        <Series Binding="grupo"></Series>
-                    </SeriesCollection>
-                    <AxisCollection>
-                        <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
-                        <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
-                    </AxisCollection>
-                    <Label>
-                        <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
-                    </Label>
-                </FlexChart>
-            </div>
-        </div>
-        <PhNotification @ref="@modalNotification">
-        </PhNotification>
-
         <PhModal @ref="modalCuestionarios">
             <Title>Cuestionarios Pendientes de Revisión</Title>
             <Body>
@@ -184,9 +154,163 @@
                 <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
             </Footer>
         </PhModal>
+        <div class="row">
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                           HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
+                           LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
+                           BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
+                    <SeriesCollection>
+                        <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
+                    </SeriesCollection>
+                </FlexChart>
+            </div>
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
+                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                    <SeriesCollection>
+                        <Series Binding="grupo"></Series>
+                    </SeriesCollection>
+                    <AxisCollection>
+                        <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                        <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                    </AxisCollection>
+                    <Label>
+                        <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                    </Label>
+                </FlexChart>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-sm-12" style="text-align: center">
+                <PhButton Type="ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
+                <PhModal @ref="modalCuestionariosRevisados">
+                    <Title>Cuestionarios Revisados</Title>
+                    <Body>
+                        <div class="form-group row" >
+                            <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
+                            </div>
+                            <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
+                                
+                            </div>
+                            <div class="col-sm-2">
+                                <PhButton Type="ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                            </div>
+                        </div>
+                        <PhTable @ref="_tableRevisadosSupervisor" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="ResumenGerencialZonasDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorSupervisor" idTable="table_RevisadosPorSupervisor">
+                            <PhTableColumnHeaders>
+                                <PhTableColumn Style="width:30%;" Value="Nombre Zona" IsHeader="true" />
+                                <PhTableColumn Style="width:50%;" Value="Nombre PDS" IsHeader="true" />
+                                <PhTableColumn Style="width:20%;" Value="Cuestionarios Revisados" IsHeader="true" />
+                            </PhTableColumnHeaders>
+                            <PhTableColumnValues>
+                                <PhTableColumn Value="@context.nombreZona" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                <PhTableColumn Value="@context.nombrePDS" Style="width:50%;" />
+                                <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
+                            </PhTableColumnValues>
+                            <PhTableActions>
+                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                            </PhTableActions>
+                        </PhTable>
+                        <PhModal @ref="modalCuestionariosRevisadosxPDS">
+                            <Title>Cuestionarios Revisados PDS: @nombrePDSRevisado</Title>
+                            <Body>
+                                <div class="form-group row" style="margin-bottom:2%;">
+                                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Fecha desde</label>
+                                    <div class="col-sm-3">
+                                        <label class="form-control" style="text-align:left">@Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd")</label>
+                                    </div>
+                                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Fecha hasta</label>
+                                    <div class="col-sm-3">
+                                        <label class="form-control" style="text-align:left">@Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd")</label>
+                                    </div>
+                                </div>
+                                <PhTable @ref="_tableRevisadosPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="CalificacionCuestionariosPDSDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorPDS" idTable="table_RevisadosPDS">
+                                    <PhTableColumnHeaders>
+                                        <PhTableColumn Style="width:30%;" Value="Cuestionario" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="% Cumplimiento" IsHeader="true" />
+                                    </PhTableColumnHeaders>
+                                    <PhTableColumnValues>
+                                        <PhTableColumn Value="@Convert.ToString(context.codigoFormulario)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                        <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:20%;" />
+                                    </PhTableColumnValues>
+                                    <PhTableActions>
+                                        <PhButton Type="ButtonType.Primary" Size="ButtonSize.Small" Text="Ver Informe" />
+                                    </PhTableActions>
+                                </PhTable>
+                            </Body>
+                            <Footer>
+                                <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            </Footer>
+                        </PhModal>
+                    </Body>
+                    <Footer>
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    </Footer>
+                </PhModal>
+            </div>
+            <div class="col-md-6 col-sm-12" style="text-align: center">
+                <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                <PhModal @ref="modalRankingxPDS">
+                    <Title>Ranking de Cumplimento de PDS</Title>
+                    <Body>
+                        <div class="form-group row">
+                            <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
+                            </div>
+                            <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
 
+                            </div>
+                            <div class="col-sm-2">
+                                <PhButton Type="ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                            </div>
+                        </div>
+                        <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
+                            <PhTableColumnHeaders>
+                                <PhTableColumn Style="width:30%;" Value="% Cumplimiento" IsHeader="true" />
+                                <PhTableColumn Style="width:20%;" Value="Cantidad PDS" IsHeader="true" />
+                            </PhTableColumnHeaders>
+                            <PhTableColumnValues>
+                                <PhTableColumn Value="@Convert.ToString(context.grupo)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
+                            </PhTableColumnValues>
+                            <PhTableActions>
+                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
+                            </PhTableActions>
+                        </PhTable>
+                        <PhModal @ref="modalPdsRango">
+                            <Title>PDS por Rango de Cumplimiento</Title>
+                            <Body>
+                                <PhTable @ref="_tablePDS" TPost="RankingCumplimientoPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@pdsRango" EndPoint="@EndPointPDSPorRango">
+                                    <PhTableColumnHeaders>
+                                        <PhTableColumn Style="width:20%;" Value="PDS" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="Porcentaje de Cumplimiento" IsHeader="true" />
+                                    </PhTableColumnHeaders>
+                                    <PhTableColumnValues>
+                                        <PhTableColumn Value="@context.nombrePDS" Style="width:20%;" />
+                                        <PhTableColumn Value="@context.porcentajeCumplimiento.ToString()" Style="width:20%;" />
+                                    </PhTableColumnValues>
+                                </PhTable>
+                            </Body>
+                            <Footer>
+                                <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            </Footer>
+                        </PhModal>
+                    </Body>
+                    <Footer>
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    </Footer>
+                </PhModal>
+            </div>
+        </div>
     </div>
-
     <div>
         <PhConfirmacion @ref="modalConfirmacion" onClickCancel="CancelConfirm" title="Confirmación" content="¿Está seguro de guardar el cuestionario?" OnClickExec="sendData">
         </PhConfirmacion>
@@ -198,18 +322,32 @@
     Loading loader { get; set; } = new();
     private PhTable<LoginDTO, ZonasPorSupervisorDTO>? _table = new();
     private PhTable<RegistroFormularioDTO, FormulariosporPOSDTO>? _table1 = new();
+    private PhTable<RegistroFormularioDTO, ResumenGerencialZonasDTO>? _tableRevisadosSupervisor = new();
+    private PhTable<RegistroFormularioDTO, CalificacionCuestionariosPDSDTO>? _tableRevisadosPDS = new();
+    private PhTable<RegistroFormularioDTO, RankingCumplimientoPDSDTO>? _tableRankingPDS = new();
+    private PhTable<RankingCumplimientoPDSInfo, RankingPDSInfo>? _tablePDS = new();
     private PhConfirmacion modalConfirmacion { get; set; } = new();
-    private PhNotification modalNotification { get; set; } = new();
     private string EndPointStr { get; set; } = null!;
     private string EndPointCuestionarios { get; set; } = null!;
     private string EndPointFormularioIngresado { get; set; } = null!;
     private string EndPointNovedades { get; set; } = null!;
+    private string EndPointObtieneRevisadosPorSupervisor { get; set; } = null!;
+    private string EndPointObtieneRevisadosPorPDS { get; set; } = null!;
+    private string EndPointObtieneRankingPDS { get; set; } = null!;
+    private string EndPointPDSPorRango { get; set; } = null!;
     LoginDTO login { get; set; } = null!;
     RegistroFormularioDTO pds { get; set; } = null!;
+    RegistroFormularioDTO rankingPDS { get; set; } = null!;
+    RankingCumplimientoPDSInfo pdsRango { get; set; } = null!;
     private PhModal? modalCuestionarios { get; set; } = new();
+    private PhModal? modalCuestionariosRevisados { get; set; } = new();
+    private PhModal? modalCuestionariosRevisadosxPDS { get; set; } = new();
+    private PhModal? modalRankingxPDS { get; set; } = new();
     private PhModal? modalCuestionario { get; set; } = new();
+    private PhModal? modalPdsRango { get; set; } = new();
     private int codigoPDS { get; set; } = 0;
     private string nombrePDS { get; set; } = string.Empty;
+    private string nombrePDSRevisado { get; set; } = string.Empty;
     private long codigoFormulario { get; set; } = 0;
     IEnumerable<SeccionesDTO> DataSeccion;
     public IEnumerable<RegistroFormularioDTO> preguntasList;
@@ -221,6 +359,11 @@
     public List<ZonasPorSupervisorDTO>? cuestionariosPendientesZona;
     List<ResumenGerencialZonasDTO>? cuestionariosRevisadosPDSSupervisor;
     List<RankingCumplimientoPDSInfo> dataRankingPDS;
+    DateTime fechaDesde;
+    C1DatePicker _c1DatePickerDesde;
+    DateTime fechaHasta;
+    C1DatePicker _c1DatePickerHasta;
+    private bool checkItemAll = false;
 
     protected override async void OnInitialized()
     {
@@ -228,6 +371,9 @@
 
         try
         {
+            fechaDesde = DateTime.Today.AddDays(-30);
+            fechaHasta = DateTime.Today;
+
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
             datoEnviar.codigoSupervisor = "fmorla";
             login = new LoginDTO();
@@ -432,27 +578,22 @@
         }
     }
 
-    private async void HandleSelectionChanged()
+    private async Task VerRevisados()
     {
         try
         {
-            string prueba = "HOLA";
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = "fmorla";
 
-            // codigoPDS = Convert.ToInt32(((LoteriaNacionalDominio.StoreCheckDTO.ZonasPorSupervisorDTO[])args.Point.DataItems)[0].codigoPDS);
-            // nombrePDS = ((LoteriaNacionalDominio.StoreCheckDTO.ZonasPorSupervisorDTO[])args.Point.DataItems)[0].nombrePDS;
-            // ZonasPorSupervisorDTO dato = new ZonasPorSupervisorDTO();
-            // dato.codigoPDS = codigoPDS;
-            // dato.nombrePDS = nombrePDS;
+            EndPointObtieneRevisadosPorSupervisor = EndPoints.obtieneRevisadosPorSupervisor;
 
+            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+               (EndPointObtieneRevisadosPorSupervisor, datoEnviar);
 
-            // EndPointCuestionarios = EndPoints.consultarFormulariosporPOS;
+            _tableRevisadosSupervisor.Data = result;
 
-            // var result = await _httpClient.PostAsJsonAsync<FormulariosporPOSDTO>
-            //    (EndPointCuestionarios, dato);
+            await modalCuestionariosRevisados.NewModal();
 
-            // _table1.Data = result;
-            // await modalCuestionarios.NewModal();
-            
         }
         catch (Exception ex)
         {
@@ -460,5 +601,139 @@
         }
     }
 
+    private async Task VerRevisadosxFecha()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = "fmorla";
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+
+            EndPointObtieneRevisadosPorSupervisor = EndPoints.obtieneRevisadosPorSupervisor;
+
+            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+               (EndPointObtieneRevisadosPorSupervisor, datoEnviar);
+
+            await loader.Show();
+            _tableRevisadosSupervisor.Data = result;
+
+            checkItemAll = false;
+            await JSRuntime.InvokeVoidAsync("observeTableChanges", "revisadosxFecha");
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+
+        }
+        catch (Exception ex)
+        {
+            //Data = null;
+            StateHasChanged();
+        }
+    }    
+
+    private async Task VerRevisadosxPDS(ResumenGerencialZonasDTO datoPDS)
+    {
+        try
+        {
+            nombrePDSRevisado = datoPDS.nombrePDS;
+
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoPDS = datoPDS.codigoPDS;
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd"); 
+            datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+
+            EndPointObtieneRevisadosPorPDS = EndPoints.obtenerCalificacioCustionariosporPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<CalificacionCuestionariosPDSDTO>
+               (EndPointObtieneRevisadosPorPDS, datoEnviar);
+
+            _tableRevisadosPDS.Data = result;
+
+            await modalCuestionariosRevisadosxPDS.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    
+    private async Task VerRanking()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
+               (EndPointObtieneRankingPDS, datoEnviar);
+
+            _tableRankingPDS.Data = result.OrderByDescending(ob=>ob.grupo).ToArray();
+
+            
+            await modalRankingxPDS.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRankingxFecha()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
+               (EndPointObtieneRankingPDS, datoEnviar);
+
+            await loader.Show();
+            _tableRankingPDS.Data = result.OrderByDescending(ob => ob.grupo).ToArray();
+            checkItemAll = false;
+            await JSRuntime.InvokeVoidAsync("observeTableChanges", "rankingxFecha");
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRankingxGrupo(RankingCumplimientoPDSDTO datoGrupo)
+    {
+        try
+        {
+            RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
+            datoConsultar.grupo = datoGrupo.grupo;
+            datoConsultar.cantidadPDS = "0";
+            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
+                (EndPointPDSPorRango, datoConsultar);
+
+            _tablePDS.Data = result.OrderByDescending(or=>or.cantidadFormularios).ToArray();
+
+            await modalPdsRango.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    
     
 }
