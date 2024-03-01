@@ -9,6 +9,8 @@
 @using IntranetLoteriaNacional.Validate
 @using LoteriaNacionalDominio
 @* @using Syncfusion.Blazor.Charts *@
+@using C1.Chart
+@using C1.Blazor.Chart
 @using static LoteriaNacionalDominio.StoreCheckDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
 
@@ -47,6 +49,19 @@
                 </AccumulationChartSeries>
             </AccumulationChartSeriesCollection>
         </SfAccumulationChart> *@
+        <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="ranking"
+                               HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                        <SeriesCollection>
+                            <Series Binding="grupo"></Series>
+                        </SeriesCollection>
+                        <AxisCollection>
+                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                            <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                        </AxisCollection>
+                        <Label>
+                            <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                        </Label>
+         </FlexChart>
         <PhModal @ref="modalPdsRango">
             <Title>PDS por Rango de Cumplimiento</Title>
             <Body>
@@ -155,7 +170,9 @@
     {
         try
         {
-            ranking = StoreService.RecuperarRankingPDS();
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+
+            ranking = StoreService.RecuperarRankingPDS(datoEnviar);
         }
         catch (Exception ex)
         {

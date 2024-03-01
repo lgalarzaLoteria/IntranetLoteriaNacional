@@ -103,31 +103,52 @@ namespace IntranetLoteriaNacional.Data
                 throw new Exception(ex.Message.ToString());
             }
         }
-        public List<RankingCumplimientoPDSInfo> RecuperarRankingPDS()
+        public List<RankingCumplimientoPDSInfo> RecuperarRankingPDS(RegistroFormularioDTO dato)
         {
             try
             {
-                EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerRankingPDS;
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerRankingPDS;
 
-                var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                request.Accept = "application/json";
+                //var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
+                //request.Method = "POST";
+                //request.ContentType = "application/json";
+                //request.Accept = "application/json";
 
-                using (WebResponse response = request.GetResponse())
+                //using (WebResponse response = request.GetResponse())
+                //{
+                //    using (Stream strReader = response.GetResponseStream())
+                //    {
+                //        if (strReader == null) return new List<RankingCumplimientoPDSInfo>();
+                //        using (StreamReader objReader = new StreamReader(strReader))
+                //        {
+                //            string responseBody = objReader.ReadToEnd();
+                //            var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
+                //            DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(bobyRespuesta.Body)!;
+
+                //        }
+                //    }
+                //}
+                var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneRankingPDS");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    using (Stream strReader = response.GetResponseStream())
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
                     {
-                        if (strReader == null) return new List<RankingCumplimientoPDSInfo>();
-                        using (StreamReader objReader = new StreamReader(strReader))
-                        {
-                            string responseBody = objReader.ReadToEnd();
-                            var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
-                            DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(bobyRespuesta.Body)!;
-                            
-                        }
+                        var ret = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(returnType.Body)!;
+                        DataRankingPDS = ret.OrderByDescending(ob => ob.grupo).ToArray(); 
                     }
                 }
+
+
                 return DataRankingPDS.ToList();
             }
             catch (Exception ex)
@@ -275,5 +296,108 @@ namespace IntranetLoteriaNacional.Data
         }
 
         #endregion
+        #region Jefe Comercial
+        public List<ZonasPorSupervisorDTO> RecuperarDataCuestionariosPendientesZonasJefeComercial(LoginDTO login)
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
+                var jsonEnviar = JsonConvert.SerializeObject(login);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneZonasPorJefeComercial");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<ZonasPorSupervisorDTO[]>(returnType.Body)!;
+                        cuestionariosPendientesZona = ret.ToList();
+                    }
+                }
+
+
+                return cuestionariosPendientesZona;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        public List<ResumenGerencialZonasDTO> ObtieneFormulariosRevisadosPDSPorJefeComercial(RegistroFormularioDTO dato)
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
+                var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneRevisadosPorJefeComercial");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<ResumenGerencialZonasDTO[]>(returnType.Body)!;
+                        cuestionariosRevisadosPDSSupervisor = ret.ToList();
+                    }
+                }
+
+
+                return cuestionariosRevisadosPDSSupervisor;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        public List<RankingCumplimientoPDSInfo> RecuperarRankingPDSJefeComercial(RegistroFormularioDTO dato)
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
+
+                var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneRankingPDSPorJefeComercial");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(returnType.Body)!;
+                    }
+                }
+
+                return DataRankingPDS.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+
+
+        #endregion
+
     }
 }

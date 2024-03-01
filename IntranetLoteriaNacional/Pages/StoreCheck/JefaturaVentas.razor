@@ -40,6 +40,275 @@
     <div>
         <div class="row" style="align-content:center">
             <p align="center" style="color: black">Pendientes de revisión</p>
+            <PhTable @ref="_table" TPost="LoginDTO" isSearcheable="false" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor">
+                <PhTableColumnHeaders>
+                    <PhTableColumn Style="width:20%;" Value="Zona" IsHeader="true" />
+                    <PhTableColumn Style="width:20%;" Value="Supervisor" IsHeader="true" />
+                    <PhTableColumn Style="width:30%;" Value="PDS" IsHeader="true" />
+                    <PhTableColumn Style="width:20%;" Value="Cuestionarios Pendientes" IsHeader="true" />
+                </PhTableColumnHeaders>
+                <PhTableColumnValues>
+                    <PhTableColumn Value="@context.nombreZona" Style="width:20%;text-align:center;vertical-align:middle;" />
+                    <PhTableColumn Value="@context.nombreSupervisor" Style="width:30%;" />
+                    <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
+                    <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
+                </PhTableColumnValues>
+                <PhTableActions>
+                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
+                </PhTableActions>
+            </PhTable>
+            <PhModal @ref="modalCuestionarios">
+                <Title>Cuestionarios Pendientes de Revisión</Title>
+                <Body>
+                    <div class="form-group row" style="margin-bottom:2%;">
+                        <label for="det" class="col-sm-2 col-form-label col-form-label-lg">PDS</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombrePDS">
+                        </div>
+                    </div>
+                    <PhTable @ref="_table1" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios"
+                             SearchDefinition="@(new[]
+                         {
+                             "codigoFormulario",
+                             "fechaRegistro"
+                         })">
+                        <PhTableColumnHeaders>
+                            <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
+                            <PhTableColumn Style="width:20%;" Value="Fecha Registro" IsHeader="true" />
+                        </PhTableColumnHeaders>
+                        <PhTableColumnValues>
+                            <PhTableColumn Value="@Convert.ToString(context.codigoFormulario)" Style="width:20%;" />
+                            <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
+                        </PhTableColumnValues>
+                        <PhTableActions>
+                            <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                        </PhTableActions>
+                    </PhTable>
+                    <PhModal @ref="modalCuestionario" maxwidth="100%">
+                        <Title>Cuestionario Ingresado</Title>
+                        <Body>
+                            <div class="form-group row" style="margin-bottom:2%;">
+                                <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Cuestionario #</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control form-control-lg" id="det" @bind-value="codigoFormulario">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-9" style="left:auto">
+                                    <label for="det" class="col-sm-9 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Pregunta</label>
+                                </div>
+                                <div class="col-sm-1" style="text-align:center">
+                                    <label for="det" class="col-sm-1 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">Si</label>
+                                </div>
+                                <div class="col-sm-1" style="text-align:center">
+                                    <label for="det" class="col-sm-1 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">No</label>
+                                </div>
+                            </div>
+                            <ul class="nav flex-column">
+                                @if (DataSeccion != null)
+                                {
+                                    int count = 1;
+                                    @foreach (var seccion in DataSeccion)
+                                    {
+                                        <li class="nav-item">
+                                            <NavLink class="nav-link">
+                                                <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
+                                                @{
+                                                    string nombrePanel = "nav" + seccion.nombreSeccion;
+                                                }
+                                                <table class="table">
+                                                    <tbody>
+                                                        @if (preguntasList != null)
+                                                        {
+                                                            foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                            {
+                                                                string nombreRadioButton = "radio" + count.ToString();
+                                                                <tr>
+                                                                    <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                    <td width="4%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = true)" />
+                                                                    </td>
+                                                                    <td width="6%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = false)" />
+                                                                    </td>
+                                                                </tr>
+                                                                count++;
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </NavLink>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </Body>
+                        <Footer>
+                            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
+                            <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        </Footer>
+                    </PhModal>
+                </Body>
+                <Footer>
+                    <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                </Footer>
+            </PhModal>
+            <div class="row">
+                <div class="col-md-6 col-sm-12">
+                    <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode="C1.Chart.ChartSelectionMode.Point"
+                               HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
+                               LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
+                               BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSJefeComercial">
+                        <SeriesCollection>
+                            <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
+                        </SeriesCollection>
+                    </FlexChart>
+                </div>
+                <div class="col-md-6 col-sm-12">
+                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
+                               HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                        <SeriesCollection>
+                            <Series Binding="grupo"></Series>
+                        </SeriesCollection>
+                        <AxisCollection>
+                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                            <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                        </AxisCollection>
+                        <Label>
+                            <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                        </Label>
+                    </FlexChart>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12" style="text-align: center">
+                    <PhButton Type="ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
+                    <PhModal @ref="modalCuestionariosRevisados">
+                        <Title>Cuestionarios Revisados</Title>
+                        <Body>
+                            <div class="form-group row">
+                                <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
+                                <div class="col-sm-2">
+                                    <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
+                                </div>
+                                <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
+                                <div class="col-sm-2">
+                                    <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
+
+                                </div>
+                                <div class="col-sm-2">
+                                    <PhButton Type="ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                </div>
+                            </div>
+                            <PhTable @ref="_tableRevisadosJefeComercial" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="ResumenGerencialZonasDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorJefeComercial" idTable="table_RevisadosPorSupervisor">
+                                <PhTableColumnHeaders>
+                                    <PhTableColumn Style="width:30%;" Value="Nombre Zona" IsHeader="true" />
+                                    <PhTableColumn Style="width:50%;" Value="Nombre PDS" IsHeader="true" />
+                                    <PhTableColumn Style="width:20%;" Value="Cuestionarios Revisados" IsHeader="true" />
+                                </PhTableColumnHeaders>
+                                <PhTableColumnValues>
+                                    <PhTableColumn Value="@context.nombreZona" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                    <PhTableColumn Value="@context.nombrePDS" Style="width:50%;" />
+                                    <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
+                                </PhTableColumnValues>
+                                <PhTableActions>
+                                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                                </PhTableActions>
+                            </PhTable>
+                            <PhModal @ref="modalCuestionariosRevisadosxPDS">
+                                <Title>Cuestionarios Revisados PDS: @nombrePDSRevisado</Title>
+                                <Body>
+                                    <div class="form-group row" style="margin-bottom:2%;">
+                                        <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Fecha desde</label>
+                                        <div class="col-sm-3">
+                                            <label class="form-control" style="text-align:left">@Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd")</label>
+                                        </div>
+                                        <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Fecha hasta</label>
+                                        <div class="col-sm-3">
+                                            <label class="form-control" style="text-align:left">@Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd")</label>
+                                        </div>
+                                    </div>
+                                    <PhTable @ref="_tableRevisadosPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="CalificacionCuestionariosPDSDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorPDS" idTable="table_RevisadosPDS">
+                                        <PhTableColumnHeaders>
+                                            <PhTableColumn Style="width:30%;" Value="Cuestionario" IsHeader="true" />
+                                            <PhTableColumn Style="width:20%;" Value="% Cumplimiento" IsHeader="true" />
+                                        </PhTableColumnHeaders>
+                                        <PhTableColumnValues>
+                                            <PhTableColumn Value="@Convert.ToString(context.codigoFormulario)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                            <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:20%;" />
+                                        </PhTableColumnValues>
+                                        <PhTableActions>
+                                            <PhButton Type="ButtonType.Primary" Size="ButtonSize.Small" Text="Ver Informe" />
+                                        </PhTableActions>
+                                    </PhTable>
+                                </Body>
+                                <Footer>
+                                    <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                </Footer>
+                            </PhModal>
+                        </Body>
+                        <Footer>
+                            <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        </Footer>
+                    </PhModal>
+                </div>
+                <div class="col-md-6 col-sm-12" style="text-align: center">
+                    <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                    <PhModal @ref="modalRankingxPDS">
+                        <Title>Ranking de Cumplimento de PDS</Title>
+                        <Body>
+                            <div class="form-group row">
+                                <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
+                                <div class="col-sm-2">
+                                    <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
+                                </div>
+                                <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
+                                <div class="col-sm-2">
+                                    <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
+
+                                </div>
+                                <div class="col-sm-2">
+                                    <PhButton Type="ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                </div>
+                            </div>
+                            <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
+                                <PhTableColumnHeaders>
+                                    <PhTableColumn Style="width:30%;" Value="% Cumplimiento" IsHeader="true" />
+                                    <PhTableColumn Style="width:20%;" Value="Cantidad PDS" IsHeader="true" />
+                                </PhTableColumnHeaders>
+                                <PhTableColumnValues>
+                                    <PhTableColumn Value="@Convert.ToString(context.grupo)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                    <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
+                                </PhTableColumnValues>
+                                <PhTableActions>
+                                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
+                                </PhTableActions>
+                            </PhTable>
+                            <PhModal @ref="modalPdsRango">
+                                <Title>PDS por Rango de Cumplimiento</Title>
+                                <Body>
+                                    <PhTable @ref="_tablePDS" TPost="RankingCumplimientoPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@pdsRango" EndPoint="@EndPointPDSPorRango">
+                                        <PhTableColumnHeaders>
+                                            <PhTableColumn Style="width:20%;" Value="PDS" IsHeader="true" />
+                                            <PhTableColumn Style="width:20%;" Value="Porcentaje de Cumplimiento" IsHeader="true" />
+                                        </PhTableColumnHeaders>
+                                        <PhTableColumnValues>
+                                            <PhTableColumn Value="@context.nombrePDS" Style="width:20%;" />
+                                            <PhTableColumn Value="@context.porcentajeCumplimiento.ToString()" Style="width:20%;" />
+                                        </PhTableColumnValues>
+                                    </PhTable>
+                                </Body>
+                                <Footer>
+                                    <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                </Footer>
+                            </PhModal>
+                        </Body>
+                        <Footer>
+                            <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        </Footer>
+                    </PhModal>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -50,10 +319,82 @@
 
 @code {
     Loading loader { get; set; } = new();
+    private PhTable<LoginDTO, ZonasPorSupervisorDTO>? _table = new();
+    private PhTable<RegistroFormularioDTO, FormulariosporPOSDTO>? _table1 = new();
+    private PhTable<RegistroFormularioDTO, ResumenGerencialZonasDTO>? _tableRevisadosJefeComercial = new();
+    private PhTable<RegistroFormularioDTO, CalificacionCuestionariosPDSDTO>? _tableRevisadosPDS = new();
+    private PhTable<RegistroFormularioDTO, RankingCumplimientoPDSDTO>? _tableRankingPDS = new();
+    private PhTable<RankingCumplimientoPDSInfo, RankingPDSInfo>? _tablePDS = new();
+
+    private PhModal? modalCuestionarios { get; set; } = new();
+    private PhModal? modalCuestionario { get; set; } = new();
+    private PhModal? modalCuestionariosRevisados { get; set; } = new();
+    private PhModal? modalCuestionariosRevisadosxPDS { get; set; } = new();
+    private PhModal? modalRankingxPDS { get; set; } = new();
+    private PhModal? modalPdsRango { get; set; } = new();
+
+    LoginDTO login { get; set; } = null!;
+    RegistroFormularioDTO pds { get; set; } = null!;
+    RegistroFormularioDTO rankingPDS { get; set; } = null!;
+    RankingCumplimientoPDSInfo pdsRango { get; set; } = null!;
+
+    private string EndPointStr { get; set; } = null!;
+    private string EndPointCuestionarios { get; set; } = null!;
+    private string EndPointFormularioIngresado { get; set; } = null!;
+    private string EndPointObtieneRevisadosPorJefeComercial { get; set; } = null!;
+    private string EndPointObtieneRevisadosPorPDS { get; set; } = null!;
+    private string EndPointObtieneRankingPDS { get; set; } = null!;
+    private string EndPointPDSPorRango { get; set; } = null!;
+
+    public List<ZonasPorSupervisorDTO>? cuestionariosPendientesZona;
+    List<ResumenGerencialZonasDTO>? cuestionariosRevisadosPDSJefeComercial;
+    List<RankingCumplimientoPDSInfo> dataRankingPDS;
+    private long codigoFormulario { get; set; } = 0;
+    IEnumerable<SeccionesDTO> DataSeccion;
+    public IEnumerable<RegistroFormularioDTO> preguntasList;
+
+
+    string mensajeTransaccion = string.Empty;
+    string iconoMostrar = string.Empty;
+    private int codigoPDS { get; set; } = 0;
+    private string nombrePDS { get; set; } = string.Empty;
+    private string nombrePDSRevisado { get; set; } = string.Empty;
+    string strJefeComercial;
+    DateTime fechaDesde;
+    C1DatePicker _c1DatePickerDesde;
+    DateTime fechaHasta;
+    C1DatePicker _c1DatePickerHasta;
+    private bool checkItemAll = false;
 
     protected override async void OnInitialized()
     {
-        
+        EndPointStr = EndPoints.obtenerZonasPorJefeComercial;
+        try
+        {
+            strJefeComercial = "jbeltran";
+
+            fechaDesde = DateTime.Today.AddDays(-30);
+            fechaHasta = DateTime.Today;
+
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoJefeVentas = strJefeComercial;
+            login = new LoginDTO();
+            login.UserName = strJefeComercial;
+            login.Password = string.Empty;
+
+            cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonasJefeComercial(login);
+
+            cuestionariosRevisadosPDSJefeComercial = StoreService.ObtieneFormulariosRevisadosPDSPorJefeComercial(datoEnviar);
+
+            dataRankingPDS = StoreService.RecuperarRankingPDSJefeComercial(datoEnviar);
+
+        }
+        catch (Exception ex)
+        {
+
+            login = new LoginDTO();
+        }
+
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -67,6 +408,308 @@
             }
 
             await loader.Close();
+        }
+    }
+    private async Task VerCuestionarios(ZonasPorSupervisorDTO dato)
+    {
+        try
+        {
+            codigoPDS = int.Parse(dato.codigoPDS.ToString());
+            nombrePDS = dato.nombrePDS;
+            EndPointCuestionarios = EndPoints.consultarFormulariosporPOSJefeComercial;
+
+            var result = await _httpClient.PostAsJsonAsync<FormulariosporPOSDTO>
+               (EndPointCuestionarios, dato);
+
+            _table1.Data = result;
+            await modalCuestionarios.NewModal();
+        }
+        catch (Exception ex)
+        {
+
+            dato = new ZonasPorSupervisorDTO();
+        }
+    }
+    private async Task CancelConfirm()
+    {
+        //this.OnInitialized();
+        StateHasChanged();
+    }
+    private async Task VerFormulario(FormulariosporPOSDTO formulario)
+    {
+        try
+        {
+            codigoFormulario = long.Parse(formulario.codigoFormulario.ToString());
+            EndPointFormularioIngresado = EndPoints.consultarFormularioIngresadoSupervisor;
+
+            var result = await _httpClient.PostAsJsonAsync<RegistroFormularioDTO>
+               (EndPointFormularioIngresado, formulario);
+
+            //_table2.Data = result;
+            List<SeccionesDTO> listaSecciones = new List<SeccionesDTO>();
+            foreach (var itemSeccion in result.Select(m => new { m.codigoSeccion, m.nombreSeccion }).Distinct())
+            {
+                SeccionesDTO datoSeccion = new SeccionesDTO();
+                datoSeccion.codigoSeccion = itemSeccion.codigoSeccion;
+                datoSeccion.nombreSeccion = itemSeccion.nombreSeccion;
+                listaSecciones.Add(datoSeccion);
+            }
+            DataSeccion = (IEnumerable<SeccionesDTO>)listaSecciones;
+
+            preguntasList = result;
+
+            await modalCuestionario.NewModal();
+        }
+        catch (Exception ex)
+        {
+
+            formulario = new FormulariosporPOSDTO();
+        }
+    }
+    private async Task sendData()
+    {
+        await loader.Show();
+        mensajeTransaccion = string.Empty;
+        iconoMostrar = string.Empty;
+        try
+        {
+            RegistroDTO listaEnviar = new RegistroDTO();
+
+            List<RegistroFormularioDTO> registro = new List<RegistroFormularioDTO>();
+            foreach (var item in preguntasList)
+            {
+                RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                if (item.respuestaJefeVentas == null)
+                    item.respuestaJefeVentas = false;
+
+                datoEnviar.codigoRegistro = item.codigoRegistro;
+                datoEnviar.codigoFormulario = item.codigoFormulario;
+                datoEnviar.codigoComisionista = item.codigoComisionista;
+                datoEnviar.codigoPDS = item.codigoPDS;
+                datoEnviar.codigoSeccion = item.codigoSeccion;
+                datoEnviar.codigoPregunta = item.codigoPregunta;
+                datoEnviar.respuestaJefeVentas = item.respuestaSupervisor;
+                datoEnviar.codigoJefeVentas = strJefeComercial;//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
+                                                               //datoEnviar.presentaNovedad = item.presentaNovedad;
+                                                               //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
+                datoEnviar.fechaRevisionJefeVentas = DateTime.Now.ToString("yyyy-MM-dd");
+                datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt"));
+
+                registro.Add(datoEnviar);
+            }
+
+            listaEnviar.registro = registro;
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionarioJefeComercial)
+                {
+                    Content = JsonContent.Create(listaEnviar)
+                };
+
+            var postResponse = await _httpClient.SendAsync(postRequest);
+            if (postResponse.IsSuccessStatusCode)
+            {
+                var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                if (returnType.CodigoError == 0)
+                {
+                    await _table1!.GetDataAsync();
+                    await _table!.GetDataAsync();
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "success";
+                }
+                else
+                {
+                    mensajeTransaccion = returnType.MensajeError;
+                    iconoMostrar = "error";
+                }
+                await modalCuestionario.CloseModal();
+                await loader.Close();
+            }
+            else
+            {
+                //await modalNotification.ErrorModal("Error de servicio");
+                mensajeTransaccion = "Error de servicio";
+                iconoMostrar = "error";
+                await loader.Close();
+            }
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = mensajeTransaccion,
+                    Icon = iconoMostrar
+                });
+
+
+        }
+        catch (HttpRequestException e)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = e.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
+    private async Task VerRevisados()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoJefeVentas = strJefeComercial;
+
+            EndPointObtieneRevisadosPorJefeComercial = EndPoints.obtieneRevisadosPorJefeComercial;
+
+            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+               (EndPointObtieneRevisadosPorJefeComercial, datoEnviar);
+
+            _tableRevisadosJefeComercial.Data = result;
+
+            await modalCuestionariosRevisados.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRevisadosxFecha()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = strJefeComercial;
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+
+            EndPointObtieneRevisadosPorJefeComercial = EndPoints.obtieneRevisadosPorJefeComercial;
+
+            var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+               (EndPointObtieneRevisadosPorJefeComercial, datoEnviar);
+
+            await loader.Show();
+            _tableRevisadosJefeComercial.Data = result;
+
+            checkItemAll = false;
+            await JSRuntime.InvokeVoidAsync("observeTableChanges", "revisadosxFecha");
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+
+        }
+        catch (Exception ex)
+        {
+            //Data = null;
+            StateHasChanged();
+        }
+    }
+    private async Task VerRevisadosxPDS(ResumenGerencialZonasDTO datoPDS)
+    {
+        try
+        {
+            nombrePDSRevisado = datoPDS.nombrePDS;
+
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoPDS = datoPDS.codigoPDS;
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+
+            EndPointObtieneRevisadosPorPDS = EndPoints.obtenerCalificacioCustionariosporPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<CalificacionCuestionariosPDSDTO>
+               (EndPointObtieneRevisadosPorPDS, datoEnviar);
+
+            _tableRevisadosPDS.Data = result;
+
+            await modalCuestionariosRevisadosxPDS.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRanking()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoJefeVentas = strJefeComercial;
+
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDSPorJefeComercial;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
+               (EndPointObtieneRankingPDS, datoEnviar);
+
+            _tableRankingPDS.Data = result.OrderByDescending(ob => ob.grupo).ToArray();
+
+
+            await modalRankingxPDS.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRankingxFecha()
+    {
+        try
+        {
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoJefeVentas = strJefeComercial;
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            datoEnviar.fechaRevisionJefeVentas = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDSPorJefeComercial;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
+               (EndPointObtieneRankingPDS, datoEnviar);
+
+            await loader.Show();
+            _tableRankingPDS.Data = result.OrderByDescending(ob => ob.grupo).ToArray();
+            checkItemAll = false;
+            await JSRuntime.InvokeVoidAsync("observeTableChanges", "rankingxFecha");
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+    private async Task VerRankingxGrupo(RankingCumplimientoPDSDTO datoGrupo)
+    {
+        try
+        {
+            RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
+            datoConsultar.grupo = datoGrupo.grupo;
+            datoConsultar.cantidadPDS = "0";
+            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
+                (EndPointPDSPorRango, datoConsultar);
+
+            _tablePDS.Data = result.OrderByDescending(or => or.cantidadFormularios).ToArray();
+
+            await modalPdsRango.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
         }
     }
 }

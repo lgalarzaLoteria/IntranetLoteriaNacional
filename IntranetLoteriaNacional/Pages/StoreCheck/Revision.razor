@@ -65,7 +65,7 @@
                         <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombrePDS">
                     </div>
                 </div>
-                <PhTable @ref="_table1" TPost="RegistroFormularioDTO" isRefresh="true" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios"
+                <PhTable @ref="_table1" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios"
                          SearchDefinition="@(new[]
                          {
                              "codigoFormulario",
@@ -83,7 +83,6 @@
                         <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
                     </PhTableActions>
                 </PhTable>
-
                 <PhModal @ref="modalCuestionario" maxwidth="100%">
                     <Title>Cuestionario Ingresado</Title>
                     <Body>
@@ -148,7 +147,6 @@
                         <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
-
             </Body>
             <Footer>
                 <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
@@ -479,6 +477,8 @@
                 var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
                 if (returnType.CodigoError == 0)
                 {
+                    await _table1!.GetDataAsync();
+                    await _table!.GetDataAsync();
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "success";
                 }
@@ -670,8 +670,9 @@
         try
         {
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = strSupervisor;
             
-            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDS;
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDSPorSupervisor;
 
             var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
                (EndPointObtieneRankingPDS, datoEnviar);
@@ -692,9 +693,10 @@
         try
         {
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            datoEnviar.codigoSupervisor = strSupervisor;
             datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
             datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
-            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDS;
+            EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDSPorSupervisor;
 
             var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
                (EndPointObtieneRankingPDS, datoEnviar);

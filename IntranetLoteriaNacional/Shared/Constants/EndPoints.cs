@@ -39,6 +39,9 @@
         public static string obtieneRevisadosPorJefeComercial = "StoreCheck/ObtieneRevisadosPorJefeComercial";
         public static string obtenerRankingPDSPorJefeComercial = "StoreCheck/ObtieneRankingPDSPorJefeComercial";
         public static string revisarCuestionarioJefeComercial = "StoreCheck/RevisarFormularioJefeComercial";
+        public static string consultarFormulariosporPOSJefeComercial = "StoreCheck/ConsultarFormulariosporPOSJefeComercial";
+        public static string consultarFormularioIngresadoSupervisor = "StoreCheck/ConsultarFormularioIngresadoSupervisor";
+
 
         #endregion
 
