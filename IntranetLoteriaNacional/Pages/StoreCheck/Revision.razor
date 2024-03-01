@@ -364,6 +364,7 @@
     DateTime fechaHasta;
     C1DatePicker _c1DatePickerHasta;
     private bool checkItemAll = false;
+    string strSupervisor;
 
     protected override async void OnInitialized()
     {
@@ -371,13 +372,15 @@
 
         try
         {
+            strSupervisor = "cneumane";
+
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
 
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
-            datoEnviar.codigoSupervisor = "fmorla";
+            datoEnviar.codigoSupervisor = strSupervisor;
             login = new LoginDTO();
-            login.UserName = "fmorla";
+            login.UserName = strSupervisor;
             login.Password = string.Empty;
 
             //await _session.GetItemAsync<string>("codigoUsuario");
@@ -452,7 +455,7 @@
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuestaSupervisor = item.respuestaSupervisor;
-                datoEnviar.codigoSupervisor = "fmorla";//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
+                datoEnviar.codigoSupervisor = strSupervisor;//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
                                                        //datoEnviar.presentaNovedad = item.presentaNovedad;
                                                        //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
                 datoEnviar.fechaRevisionSupervisor = DateTime.Now.ToString("yyyy-MM-dd");
@@ -583,7 +586,7 @@
         try
         {
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
-            datoEnviar.codigoSupervisor = "fmorla";
+            datoEnviar.codigoSupervisor = strSupervisor;
 
             EndPointObtieneRevisadosPorSupervisor = EndPoints.obtieneRevisadosPorSupervisor;
 
@@ -606,7 +609,7 @@
         try
         {
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
-            datoEnviar.codigoSupervisor = "fmorla";
+            datoEnviar.codigoSupervisor = strSupervisor;
             datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
             datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
 

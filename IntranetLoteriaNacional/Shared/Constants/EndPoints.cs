@@ -34,6 +34,11 @@
         public static string obtieneRevisadosPorSupervisor = "StoreCheck/ObtieneRevisadosPorSupervisor";
         public static string obtenerPDSPorRangoCumplimiento = "StoreCheck/ObtienePDSPorRangoCumplimiento";
         public static string obtenerCalificacioCustionariosporPDS = "StoreCheck/ObtieneCalificacioCustionariosporPDS";
+        
+        public static string obtenerZonasPorJefeComercial = "StoreCheck/ObtieneZonasPorJefeComercial";
+        public static string obtieneRevisadosPorJefeComercial = "StoreCheck/ObtieneRevisadosPorJefeComercial";
+        public static string obtenerRankingPDSPorJefeComercial = "StoreCheck/ObtieneRankingPDSPorJefeComercial";
+        public static string revisarCuestionarioJefeComercial = "StoreCheck/RevisarFormularioJefeComercial";
 
         #endregion
 

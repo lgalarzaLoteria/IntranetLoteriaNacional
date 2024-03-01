@@ -1,0 +1,72 @@
+﻿@page "/StoreCheck/JefaturaVentas"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Data
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.SeguridadDTO
+@using C1.Chart
+@using C1.Blazor.Chart
+@using C1.Blazor.DateTimeEditors
+@using C1.Blazor.Input
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+@inject StoreCheckService StoreService
+@inject IJSRuntime JSRuntime
+
+<style>
+    .column {
+        width: 50%;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
+
+<article class="art">
+    <h1 class="tituloPagina">Área de trabajo Jefe de Ventas</h1>
+    <div>
+        <div class="row" style="align-content:center">
+            <p align="center" style="color: black">Pendientes de revisión</p>
+        </div>
+
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+
+
+@code {
+    Loading loader { get; set; } = new();
+
+    protected override async void OnInitialized()
+    {
+        
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./StoreCheck/JefaturaVentas", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+        }
+    }
+}
