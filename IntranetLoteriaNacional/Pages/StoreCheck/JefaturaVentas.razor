@@ -154,34 +154,19 @@
                 </Footer>
             </PhModal>
             <div class="row">
-                <div class="col-md-6 col-sm-12">
-                    <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode="C1.Chart.ChartSelectionMode.Point"
+                <div class="col-md-12 col-sm-12">
+                    <FlexChart Class="chart" ChartType="ChartType.Bar" Stacking="Stacking.None" SelectionMode="C1.Chart.ChartSelectionMode.Point"
                                HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
                                LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
-                               BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSJefeComercial">
+                               BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSJefeComercial" >
                         <SeriesCollection>
                             <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
                         </SeriesCollection>
                     </FlexChart>
                 </div>
-                <div class="col-md-6 col-sm-12">
-                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
-                               HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
-                        <SeriesCollection>
-                            <Series Binding="grupo"></Series>
-                        </SeriesCollection>
-                        <AxisCollection>
-                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
-                            <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
-                        </AxisCollection>
-                        <Label>
-                            <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
-                        </Label>
-                    </FlexChart>
-                </div>
             </div>
             <div class="row">
-                <div class="col-md-6 col-sm-12" style="text-align: center">
+                <div class="col-md-12 col-sm-12" style="text-align: center">
                     <PhButton Type="ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
                     <PhModal @ref="modalCuestionariosRevisados">
                         <Title>Cuestionarios Revisados</Title>
@@ -252,7 +237,34 @@
                         </Footer>
                     </PhModal>
                 </div>
-                <div class="col-md-6 col-sm-12" style="text-align: center">
+            </div>
+            <div class="row">
+                <br />
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12" style="text-align:center">
+                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" LegendPosition="Position.None" LegendStyle="font-size:13px" 
+                               BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
+                               HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                        <SeriesCollection>
+                            <Series Name="Actual" Binding="grupo"></Series>
+                        </SeriesCollection>
+                        <AxisCollection>
+                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                            <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                        </AxisCollection>
+                        <Label>
+                            <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                        </Label>
+                        <Options>
+                            <ChartOptions FunnelType="FunnelChartType.Rectangle" />
+                        </Options>
+                    </FlexChart>
+                    
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12" style="text-align:center">
                     <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                     <PhModal @ref="modalRankingxPDS">
                         <Title>Ranking de Cumplimento de PDS</Title>
@@ -310,7 +322,6 @@
                 </div>
             </div>
         </div>
-
     </div>
     <Loading @ref="loader"></Loading>
 </article>
@@ -515,6 +526,19 @@
                 {
                     await _table1!.GetDataAsync();
                     await _table!.GetDataAsync();
+
+                    RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                    datoEnviar.codigoJefeVentas = strJefeComercial;
+                    login = new LoginDTO();
+                    login.UserName = strJefeComercial;
+                    login.Password = string.Empty;
+
+                    cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonasJefeComercial(login);
+
+                    cuestionariosRevisadosPDSJefeComercial = StoreService.ObtieneFormulariosRevisadosPDSPorJefeComercial(datoEnviar);
+
+                    dataRankingPDS = StoreService.RecuperarRankingPDSJefeComercial(datoEnviar);
+
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "success";
                 }
@@ -694,9 +718,15 @@
     {
         try
         {
+            if (int.Parse(datoGrupo.cantidadPDS) == 0)
+                return;
+
             RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
             datoConsultar.grupo = datoGrupo.grupo;
             datoConsultar.cantidadPDS = "0";
+            datoConsultar.codigoUsuario = strJefeComercial;
+            datoConsultar.tipoConsulta = "J";
+
             EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
 
             var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>

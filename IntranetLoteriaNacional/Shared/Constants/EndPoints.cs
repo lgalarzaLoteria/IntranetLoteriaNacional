@@ -41,6 +41,7 @@
         public static string revisarCuestionarioJefeComercial = "StoreCheck/RevisarFormularioJefeComercial";
         public static string consultarFormulariosporPOSJefeComercial = "StoreCheck/ConsultarFormulariosporPOSJefeComercial";
         public static string consultarFormularioIngresadoSupervisor = "StoreCheck/ConsultarFormularioIngresadoSupervisor";
+        public static string obtenerZonasPorGerencia = "StoreCheck/ObtieneZonasPorGerencia";
 
 
         #endregion

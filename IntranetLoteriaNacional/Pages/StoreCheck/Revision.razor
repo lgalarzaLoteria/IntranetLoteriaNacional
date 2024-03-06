@@ -154,7 +154,7 @@
         </PhModal>
         <div class="row">
             <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.Stacked" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.None" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
                            HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
                            LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
                            BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
@@ -165,7 +165,7 @@
             </div>
             <div class="col-md-6 col-sm-12">
                 <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
-                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px;">
                     <SeriesCollection>
                         <Series Binding="grupo"></Series>
                     </SeriesCollection>
@@ -251,7 +251,7 @@
                     </Footer>
                 </PhModal>
             </div>
-            <div class="col-md-6 col-sm-12" style="text-align: center">
+            <div class="col-md-6 col-sm-12" style="text-indent: 298px;">
                 <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                 <PhModal @ref="modalRankingxPDS">
                     <Title>Ranking de Cumplimento de PDS</Title>
@@ -370,7 +370,7 @@
 
         try
         {
-            strSupervisor = "cneumane";
+            strSupervisor = "fmorla";
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -454,8 +454,8 @@
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuestaSupervisor = item.respuestaSupervisor;
                 datoEnviar.codigoSupervisor = strSupervisor;//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
-                                                       //datoEnviar.presentaNovedad = item.presentaNovedad;
-                                                       //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
+                                                            //datoEnviar.presentaNovedad = item.presentaNovedad;
+                                                            //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
                 datoEnviar.fechaRevisionSupervisor = DateTime.Now.ToString("yyyy-MM-dd");
                 datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
@@ -479,6 +479,19 @@
                 {
                     await _table1!.GetDataAsync();
                     await _table!.GetDataAsync();
+                    RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                    datoEnviar.codigoSupervisor = strSupervisor;
+                    login = new LoginDTO();
+                    login.UserName = strSupervisor;
+                    login.Password = string.Empty;
+
+                    cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonas(login);
+
+                    cuestionariosRevisadosPDSSupervisor = StoreService.ObtieneFormulariosRevisadosPDSPorSupervisor(datoEnviar);
+
+                    dataRankingPDS = StoreService.RecuperarRankingPDSSupervisor(datoEnviar);
+
+
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "success";
                 }
@@ -664,14 +677,14 @@
             throw new Exception(ex.Message.ToString());
         }
     }
-    
+
     private async Task VerRanking()
     {
         try
         {
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
             datoEnviar.codigoSupervisor = strSupervisor;
-            
+
             EndPointObtieneRankingPDS = EndPoints.obtenerRankingPDSPorSupervisor;
 
             var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
@@ -679,7 +692,7 @@
 
             _tableRankingPDS.Data = result.OrderByDescending(ob=>ob.grupo).ToArray();
 
-            
+
             await modalRankingxPDS.NewModal();
 
         }
@@ -724,6 +737,9 @@
             RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
             datoConsultar.grupo = datoGrupo.grupo;
             datoConsultar.cantidadPDS = "0";
+            datoConsultar.codigoUsuario = strSupervisor;
+            datoConsultar.tipoConsulta = "S";
+
             EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
 
             var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>

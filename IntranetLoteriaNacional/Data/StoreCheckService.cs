@@ -21,6 +21,7 @@ namespace IntranetLoteriaNacional.Data
         ResumenGerencialZonasDTO[] Data;
         RankingCumplimientoPDSInfo[] DataRankingPDS;
         ZonasPorSupervisorDTO[] dataCuentionariosPendientesZona;
+        TiempoRevisionDTO[] tiempoRevisionJefeComercial;
 
 
         public List<ZonasInfo> Zonas;
@@ -398,6 +399,61 @@ namespace IntranetLoteriaNacional.Data
 
 
         #endregion
+
+        public List<TiempoRevisionDTO> ObtieneDiasRetrasoRevisionJefeComercial()
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerRankingPDS;
+
+                //var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
+                //request.Method = "POST";
+                //request.ContentType = "application/json";
+                //request.Accept = "application/json";
+
+                //using (WebResponse response = request.GetResponse())
+                //{
+                //    using (Stream strReader = response.GetResponseStream())
+                //    {
+                //        if (strReader == null) return new List<RankingCumplimientoPDSInfo>();
+                //        using (StreamReader objReader = new StreamReader(strReader))
+                //        {
+                //            string responseBody = objReader.ReadToEnd();
+                //            var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
+                //            DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(bobyRespuesta.Body)!;
+
+                //        }
+                //    }
+                //}
+
+                //var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneDiasRetrasoRevisionJefeComercial");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                //request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<TiempoRevisionDTO[]>(returnType.Body)!;
+                        tiempoRevisionJefeComercial = ret;
+                    }
+                }
+
+
+                return tiempoRevisionJefeComercial.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
 
     }
 }

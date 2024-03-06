@@ -211,7 +211,7 @@
                 datoEnviar.codigoRegistro = 0;
                 datoEnviar.codigoFormulario = 0;
                 datoEnviar.codigoPDS = 0;
-                datoEnviar.codigoComisionista = "wluna";//await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.codigoComisionista = "cparada";//await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuesta = item.repuestaPregunta;
@@ -262,7 +262,10 @@
                     Icon = iconoMostrar
                 });
 
-            //this.OnInitialized();
+            foreach(var item in preguntasList)
+            {
+                item.repuestaPregunta = null;
+            }
         }
         catch (HttpRequestException e)
         {

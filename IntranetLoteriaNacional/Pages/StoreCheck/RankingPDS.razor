@@ -33,7 +33,7 @@
     }
 </style>
 <article class="art">
-    <h1 class="tituloPagina">Ranking de Cumplimiento por PDS</h1>
+    <h1 class="tituloPagina">Dashboard Store Check</h1>
     <div>
         @* <SfAccumulationChart Title="PDS por rango de cumplimiento" EnableAnimation="false">
             <AccumulationChartEvents OnPointClick="PointClick"></AccumulationChartEvents>
@@ -49,82 +49,100 @@
                 </AccumulationChartSeries>
             </AccumulationChartSeriesCollection>
         </SfAccumulationChart> *@
-        <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="ranking"
-                               HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
-                        <SeriesCollection>
-                            <Series Binding="grupo"></Series>
-                        </SeriesCollection>
-                        <AxisCollection>
-                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
-                            <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
-                        </AxisCollection>
-                        <Label>
-                            <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
-                        </Label>
-         </FlexChart>
-        <PhModal @ref="modalPdsRango">
-            <Title>PDS por Rango de Cumplimiento</Title>
-            <Body>
-                <PhTable @ref="_tablePDS" TPost="RankingPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@pds" EndPoint="@EndPointCuestionarios">
-                    <PhTableColumnHeaders>
-                        <PhTableColumn Style="width:20%;" Value="PDS" IsHeader="true" />
-                        <PhTableColumn Style="width:20%;" Value="Porcentaje de Cumplimiento" IsHeader="true" />
-                    </PhTableColumnHeaders>
-                    <PhTableColumnValues>
-                        <PhTableColumn Value="@context.nombrePDS" Style="width:20%;" />
-                        <PhTableColumn Value="@context.porcentajeCumplimiento.ToString()" Style="width:20%;" />
-                    </PhTableColumnValues>
-                    <PhTableActions>
-                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerDetallePDS(context))" Size="ButtonSize.Small" Text="Ver Detalle PDS" />
-                    </PhTableActions>
-                </PhTable>
-                <PhModal @ref="modalResumen">
-                    <Title>Cantidad Cuestionarios por PDS</Title>
-                    <Body>
-                        <PhTable @ref="_table1" TPost="RankingPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@cuestionario" EndPoint="@EndPointStr">
+        <PhTable @ref="_table" TPost="LoginDTO" isSearcheable="false" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor">
+            <PhTableColumnHeaders>
+                <PhTableColumn Style="width:20%;" Value="Zona" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Jefe Comercial" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Supervisor" IsHeader="true" />
+                <PhTableColumn Style="width:30%;" Value="PDS" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Cuestionarios Revisados" IsHeader="true" />
+            </PhTableColumnHeaders>
+            <PhTableColumnValues>
+                <PhTableColumn Value="@context.nombreZona" Style="width:20%;text-align:center;vertical-align:middle;" />
+                <PhTableColumn Value="@context.nombreJefeComercial" Style="width:20%;" />
+                <PhTableColumn Value="@context.nombreSupervisor" Style="width:20%;" />
+                <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
+                <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
+            </PhTableColumnValues>
+            @* <PhTableActions>
+                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
+            </PhTableActions> *@
+        </PhTable>
+        <div class="row">
+            <br />
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="ranking"
+                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                    <SeriesCollection>
+                        <Series Binding="grupo"></Series>
+                    </SeriesCollection>
+                    <AxisCollection>
+                        <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                        <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
+                    </AxisCollection>
+                    <Label>
+                        <DataLabel Position="C1.Chart.LabelPosition.Center" Content="{grupo}% - PDS: {cantidadPDS}"></DataLabel>
+                    </Label>
+                </FlexChart>
+            </div>
+            <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Column" Stacking="Stacking.None" Palette="Palette.Standard"
+                           HeaderContent="Revisión de cuestionarios" HeaderStyle="font-size:15px"
+                           LegendPosition="Position.Bottom" LegendStyle="font-size:15px"
+                           BindingX="nombreUsuario" ItemsSource="dataTiempoRevision">
+                    <SeriesCollection>
+                        <Series Name="A Tiempo" Binding="revisadosATiempo" />
+                        <Series Name="Retrasados" Binding="revisadosConAtraso" />
+                    </SeriesCollection>
+                </FlexChart>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-sm-12" style="text-indent: 298px;">
+                <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                <PhModal @ref="modalRankingxPDS">
+                    <Title>Ranking de Cumplimento de PDS</Title>
+                     <Body>
+                        <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="RankingCumplimientoPDSInfo" Body="@rankingPDS" EndPoint="@EndPointObtieneRanking" idTable="table_RankingPDS">
                             <PhTableColumnHeaders>
-                                <PhTableColumn Style="width:30%;" Value="PDS" IsHeader="true" />
-                                <PhTableColumn Style="width:30%;" Value="Cantidad Cuestionarios" IsHeader="true" />
-                                <PhTableColumn Style="width:30%;" Value="Porcentaje Cumplimiento" IsHeader="true" />
+                                <PhTableColumn Style="width:30%;" Value="% Cumplimiento" IsHeader="true" />
+                                <PhTableColumn Style="width:20%;" Value="Cantidad PDS" IsHeader="true" />
                             </PhTableColumnHeaders>
                             <PhTableColumnValues>
-                                <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
-                                <PhTableColumn Value="@Convert.ToString(context.cantidadFormularios)" Style="width:30%;" />
-                                <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:30%;" />
+                                <PhTableColumn Value="@Convert.ToString(context.grupo)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
-                                <PhButton Type="ButtonType.Primary" OnClick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
                             </PhTableActions>
                         </PhTable>
-                        <PhModal @ref="modalCuestionarios">
-                            <Title>Cuestionarios y su porcentaje de cumplimiento en PDS</Title>
+                        <PhModal @ref="modalPdsRango">
+                            <Title>PDS por Rango de Cumplimiento</Title>
                             <Body>
-                                <PhTable @ref="_table2" TPost="CalificacionCuestionariosPDSDTO" isSearcheable="false" isRefresh="false" TReturn="CalificacionCuestionariosPDSDTO" Body="@pds1" EndPoint="@EndPointCuestionarios">
+                                <PhTable @ref="_tablePDS1" TPost="RankingCumplimientoPDSInfo" isSearcheable="false" isRefresh="false" TReturn="RankingPDSInfo" Body="@pdsRango" EndPoint="@EndPointPDSPorRango">
                                     <PhTableColumnHeaders>
-                                        <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
+                                        <PhTableColumn Style="width:20%;" Value="PDS" IsHeader="true" />
                                         <PhTableColumn Style="width:20%;" Value="Porcentaje de Cumplimiento" IsHeader="true" />
                                     </PhTableColumnHeaders>
                                     <PhTableColumnValues>
-                                        <PhTableColumn Value="@context.codigoFormulario.ToString()" Style="width:20%;" />
+                                        <PhTableColumn Value="@context.nombrePDS" Style="width:20%;" />
                                         <PhTableColumn Value="@context.porcentajeCumplimiento.ToString()" Style="width:20%;" />
                                     </PhTableColumnValues>
                                 </PhTable>
                             </Body>
                             <Footer>
-                                <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                             </Footer>
                         </PhModal>
-                    </Body>
+                     </Body>
                     <Footer>
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalResumen.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
-            </Body>
-            <Footer>
-                <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
-            </Footer>
-        </PhModal>
-        
+            </div>
+        </div>
     </div>
     <Loading @ref="loader"></Loading>
 </article>
@@ -132,21 +150,30 @@
 
 @code {
     Loading loader { get; set; } = new();
+    private PhTable<LoginDTO, ZonasPorSupervisorDTO>? _table = new();
     private string EndPointStr { get; set; } = null!;
     private string EndPointCuestionarios { get; set; } = null!;
     private string EndPointPDSPorRango { get; set; } = null!;
+    private string EndPointObtieneRanking { get; set; } = null!;
     private List<RankingCumplimientoPDSInfo>? ranking;
     private List<RankingPDSInfo>? resumenFormulariosPDS;
+    private List<TiempoRevisionDTO>? dataTiempoRevision;
     private List<CalificacionCuestionariosPDSDTO>? pdsPorRango;
+    private PhModal? modalRankingxPDS { get; set; } = new();
     private PhModal? modalPdsRango { get; set; } = new();
     private PhModal? modalResumen { get; set; } = new();
     private PhModal? modalCuestionarios { get; set; } = new();
+    LoginDTO login { get; set; } = null!;
+    RegistroFormularioDTO rankingPDS { get; set; } = null!;
+    RankingCumplimientoPDSInfo pdsRango { get; set; } = null!;
     private int codigoPDS { get; set; } = 0;
     private string nombrePDS = string.Empty;
     private string rangoCumplimientoPDS = string.Empty;
     private string tituloResumenFormulariosPDS = string.Empty; 
     private PhTable<RankingPDSInfo, RankingPDSInfo>? _tablePDS = new();
+    private PhTable<RankingCumplimientoPDSInfo, RankingPDSInfo>? _tablePDS1 = new();
     private PhTable<RankingPDSInfo, RankingPDSInfo>? _table1 = new();
+    private PhTable<RegistroFormularioDTO, RankingCumplimientoPDSInfo>? _tableRankingPDS = new();
     private PhTable<CalificacionCuestionariosPDSDTO, CalificacionCuestionariosPDSDTO>? _table2 = new();
     private RankingPDSInfo cuestionario;
     RankingPDSInfo pds { get; set; } = null!;
@@ -173,91 +200,75 @@
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
 
             ranking = StoreService.RecuperarRankingPDS(datoEnviar);
+
+            dataTiempoRevision = StoreService.ObtieneDiasRetrasoRevisionJefeComercial();
+
+
+            login = new LoginDTO();
+            EndPointStr = EndPoints.obtenerZonasPorGerencia;
+            var result = await _httpClient.PostAsJsonAsync<ZonasPorSupervisorDTO>
+               (EndPointStr, login);
+
+
         }
         catch (Exception ex)
         {
             ranking = new List<RankingCumplimientoPDSInfo>();
         }
     }
-    // private async void PointClick(AccumulationPointEventArgs args)
-    // {
-    //     try
-    //     {
-    //         //nombrePDS = args.Point.X.ToString();
-    //         // tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
-    //         //resumenFormulariosPDS = ranking.Where(dt => dt.nombrePDS == nombrePDS).ToList();
-    //         rangoCumplimientoPDS = args.Point.Label.ToString();
-    //         EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
-    //         RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
-    //         datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
-    //         datoConsultar.cantidadPDS = "0";
+    
 
-    //         var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
-    //            (EndPointPDSPorRango, datoConsultar);
-
-    //         _tablePDS.Data = result;
-    //         resumenFormulariosPDS = result.ToList();
-
-    //         //pdsPorRango = StoreService.RecuperarPDSPorRangoCumplimiento(rangoCumplimientoPDS);
-    //         //Por el momento muestro en tabla
-
-    //         await modalPdsRango.NewModal();
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         //resumenFormulariosPDS = new List<RankingPDSInfo>();
-    //     }
-    // }
-    private async Task VerDetallePDS(RankingPDSInfo dato)
+    private async Task VerRanking()
     {
         try
         {
-            nombrePDS = dato.nombrePDS;             
-            tituloResumenFormulariosPDS = "Resumen por PDS: " + nombrePDS;
-            
-            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
+            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            EndPointObtieneRanking = EndPoints.obtenerRankingPDS;
+
+            var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSInfo>
+               (EndPointObtieneRanking, datoEnviar);
+
+            _tableRankingPDS.Data = result.OrderByDescending(or=>or.grupo).ToArray();
+
+
+            await modalRankingxPDS.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+
+    private async Task VerRankingxGrupo(RankingCumplimientoPDSInfo datoGrupo)
+    {
+        try
+        {
+            if (int.Parse(datoGrupo.cantidadPDS) == 0)
+                return;
+
             RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
-            datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
+            datoConsultar.grupo = datoGrupo.grupo;
             datoConsultar.cantidadPDS = "0";
+            datoConsultar.codigoUsuario = await _session.GetItemAsync<string>("codigoUsuario"); 
+            datoConsultar.tipoConsulta = "G";
+
+            EndPointPDSPorRango = EndPoints.obtenerPDSPorRangoCumplimiento;
 
             var result = await _httpClient.PostAsJsonAsync<RankingPDSInfo>
-               (EndPointPDSPorRango, datoConsultar);
+                (EndPointPDSPorRango, datoConsultar);
 
-            resumenFormulariosPDS = result.ToList();
-            resumenFormulariosPDS = resumenFormulariosPDS.Where(dt => dt.nombrePDS == nombrePDS).ToList();
-                     
-            _table1.Data = resumenFormulariosPDS.ToArray();
+            _tablePDS1.Data = result.OrderByDescending(or => or.cantidadFormularios).ToArray();
 
-            await modalResumen.NewModal();
-            
+            await modalPdsRango.NewModal();
+
         }
         catch (Exception ex)
         {
-            //resumenFormulariosPDS = new List<RankingPDSInfo>();
+            throw new Exception(ex.Message.ToString());
         }
     }
-    private async Task VerCuestionarios(RankingPDSInfo dato)
-    {
-        try
-        {
-            codigoPDS = int.Parse(dato.codigoPDS.ToString());
-            nombrePDS = dato.nombrePDS;
-            EndPointCuestionarios = EndPoints.obtenerCalificacioCustionariosporPDS;
 
-            CalificacionCuestionariosPDSDTO datoConsultar = new CalificacionCuestionariosPDSDTO();
-            datoConsultar.codigoPDS = codigoPDS;
-            datoConsultar.nombrePDS = nombrePDS;
-
-            var result = await _httpClient.PostAsJsonAsync<CalificacionCuestionariosPDSDTO>
-               (EndPointCuestionarios, datoConsultar);
-
-            _table2.Data = result;
-            await modalCuestionarios.NewModal();
-        }
-        catch (Exception ex)
-        {
-            dato = new RankingPDSInfo();
-        }
-    }
+    
 
 }
