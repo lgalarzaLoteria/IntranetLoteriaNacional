@@ -9,7 +9,6 @@ using IntranetLoteriaNacional.Shared.Constants;
 using CurrieTechnologies.Razor.SweetAlert2;
 using DevExpress.Blazor;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -50,10 +49,7 @@ Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Mgo+DSMBaFt+QHFq
 builder.WebHost.UseWebRoot("wwwroot");
 builder.WebHost.UseStaticWebAssets();
 
-
 var app = builder.Build();
-
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

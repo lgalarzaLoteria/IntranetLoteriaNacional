@@ -15,8 +15,20 @@
     </div>
 
     <main style="background-color:white">
-        <div class="top-row px-4" style="background-color:white">
-           @*  <div class="col px-sd-4" style="background-color:#021151">
+        <div class="row">
+            <div class="col-md-4 col-sm-12" style="text-align:left">
+                <p style="color: var(--ph-skyblue);background-color:white">Usuario conectado: @nombreUsuario</p>
+            </div>
+            <div class="col-md-4 col-sm-12" style="text-align:left">
+                <p style="color: var(--ph-skyblue);background-color:white">@PDSUsuario</p>
+            </div>
+            <div class="col-md-4 col-sm-12" style="text-align:right">
+                <a style="color: var(--ph-skyblue);background-color:white" target="_blank" @onclick=CerrarSesion>Cerrar Sesión</a>
+            </div>
+        </div>
+        
+       @*  <div class="top-row px-4" style="background-color:white">
+            <div class="col px-sd-4" style="background-color:#021151">
                 <div class="row-cols-2" style="background-color:#021151">
                     <div class="col-4 align-content-center" style="background-color:#021151">
                         <h1 style="text-align:left;font-size:medium; color: var(--ph-skyblue)"></h1>
@@ -28,9 +40,8 @@
                         <p style="text-align:left;font-size:medium; color: var(--ph-skyblue)">Sessión Actual @fechaHora</p>
                     </div>
                 </div>
-            </div> *@
-            <a style="text-align:right; color: var(--ph-skyblue);background-color:white" target="_blank" @onclick=CerrarSesion>Cerrar Sesión</a>
-        </div>
+            </div>
+        </div> *@
         <article class="content px-4" style="background-color:white">
             @Body
         </article>
@@ -38,13 +49,18 @@
 </div>
 @code
 {
-    private string nombreUsuario = "";
+    private string nombreUsuario = string.Empty;
+    private string PDSUsuario = string.Empty;
     private string fechaHora = System.DateTime.Now.ToString();
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             nombreUsuario = await _session.GetItemAsync<string>("nombreUsuario");
+            string rolUsuario = await _session.GetItemAsync<string>("RolUsuario");
+            if (rolUsuario=="Comisionista")
+               PDSUsuario = "PDS: " + await _session.GetItemAsync<string>("PDSUsuario");
+
             StateHasChanged();
         }
     }

@@ -101,9 +101,21 @@
                 var respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login);
 
                 string rolUsuario = respuestaRolUsuario[0].nombreRol;
+                string PDSUsuario = string.Empty;
+
+                if(rolUsuario=="Comisionista")
+                {
+                    LoginDTO login1 = new LoginDTO();
+                    login1.UserName = "lzambrano";
+                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login1);
+                    PDSUsuario = respuestaPDSUsuario[0].NombreUsuario;
+                }  
 
                 await _session.SetItemAsync("nombreUsuario", existeUsuario[0].NombreUsuario);
                 await _session.SetItemAsync("codigoUsuario", login.UserName);
+                await _session.SetItemAsync("PDSUsuario", PDSUsuario);
+                await _session.SetItemAsync("RolUsuario", rolUsuario);
+
                 IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());// objeto para guardar la ip
                 foreach (IPAddress ip in host.AddressList)
                 {
@@ -130,10 +142,11 @@
                 else
                 {
                     await _session.SetItemAsync<MenuDTO[]>("_userMenu", menuUsuario);
+                    _navigation.NavigateTo("./Home/Home");
                     switch (rolUsuario)
                     {
                         case "Comisionista":
-                            _navigation.NavigateTo("./StoreCheck/Cuestionario");
+                            _navigation.NavigateTo("./StoreCheck/Promociones");
                             break;
                         case "Supervisor PDS":
                             _navigation.NavigateTo("./StoreCheck/Revision");
@@ -148,8 +161,6 @@
                             _navigation.NavigateTo("./Home/Home");
                             break;
                     }
-                    
-                    
                 }
 
             }

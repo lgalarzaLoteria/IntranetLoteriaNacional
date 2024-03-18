@@ -35,20 +35,6 @@
 <article class="art">
     <h1 class="tituloPagina">Dashboard Store Check</h1>
     <div>
-        @* <SfAccumulationChart Title="PDS por rango de cumplimiento" EnableAnimation="false">
-            <AccumulationChartEvents OnPointClick="PointClick"></AccumulationChartEvents>
-            <AccumulationChartTooltipSettings Enable="true"></AccumulationChartTooltipSettings>
-            <AccumulationChartLegendSettings Visible="false"></AccumulationChartLegendSettings>
-            <AccumulationChartSeriesCollection>
-                <AccumulationChartSeries DataSource="@ranking" XName="cantidadPDS" YName="grupo"
-                                         Type="AccumulationType.Funnel" Explode="false" GapRatio="0.03" Height="80%" Width="90%" NeckWidth="25%" NeckHeight="18%">
-                    <AccumulationDataLabelSettings Visible="true" Name="DataLabelMappingName" Position="AccumulationLabelPosition.Inside">
-                        <AccumulationChartConnector Length="10px"></AccumulationChartConnector>
-                        <AccumulationChartDataLabelFont Size="25px" FontWeight="600"></AccumulationChartDataLabelFont>
-                    </AccumulationDataLabelSettings>
-                </AccumulationChartSeries>
-            </AccumulationChartSeriesCollection>
-        </SfAccumulationChart> *@
         <PhTable @ref="_table" TPost="LoginDTO" isSearcheable="false" TReturn="ZonasPorSupervisorDTO" Body="@login" EndPoint="@EndPointStr" isAgroup=true idTable="table_ZonasPorSupervisor">
             <PhTableColumnHeaders>
                 <PhTableColumn Style="width:20%;" Value="Zona" IsHeader="true" />
@@ -74,7 +60,7 @@
         <div class="row">
             <div class="col-md-6 col-sm-12">
                 <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="ranking"
-                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
+                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px" LegendPosition="C1.Chart.Position.None">
                     <SeriesCollection>
                         <Series Binding="grupo"></Series>
                     </SeriesCollection>

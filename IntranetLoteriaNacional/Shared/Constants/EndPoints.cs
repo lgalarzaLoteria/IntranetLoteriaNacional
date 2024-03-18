@@ -7,6 +7,7 @@
         public static string obtieneRolUsuario = "Seguridad/ObtieneRolUsuario";
         public static string obtieneMenuUsuario = "Seguridad/ObtieneMenuUsuario";
         public static string verificarPermisos = "Seguridad/MantenimientoObtienePermiso";
+        public static string obtienePDSUsuario = "Seguridad/ObtienePDSUsuario";
         #endregion
 
         #region EndPoints Store Check
@@ -42,6 +43,8 @@
         public static string consultarFormulariosporPOSJefeComercial = "StoreCheck/ConsultarFormulariosporPOSJefeComercial";
         public static string consultarFormularioIngresadoSupervisor = "StoreCheck/ConsultarFormularioIngresadoSupervisor";
         public static string obtenerZonasPorGerencia = "StoreCheck/ObtieneZonasPorGerencia";
+        public static string obtenerInformeSupervisor = "StoreCheck/ObtieneInformeSupervisor";
+        public static string obtenerInformeJefeVentas = "StoreCheck/ObtieneInformeJefeVentas";
 
 
         #endregion

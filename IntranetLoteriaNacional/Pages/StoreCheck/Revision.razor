@@ -91,6 +91,10 @@
                             <div class="col-sm-10">
                                 <input type="text" class="form-control form-control-lg" id="det" @bind-value="codigoFormulario">
                             </div>
+                            <label for="det" class="col-sm-2 col-form-label col-form-label-lg">PDS</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control form-control-lg" id="det" @bind-value="nombrePDS">
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-sm-9" style="left:auto">
@@ -143,6 +147,7 @@
                         </ul>
                     </Body>
                     <Footer>
+                        <InputFile class="form-control" Id='foo' OnChange="SubirFoto" />
                         <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
                         <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
@@ -154,9 +159,9 @@
         </PhModal>
         <div class="row">
             <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="ChartType.Column" Stacking="Stacking.None" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                <FlexChart Class="chart" ChartType="ChartType.Bar" Stacking="Stacking.None" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
                            HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
-                           LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
+                           LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px"
                            BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
                     <SeriesCollection>
                         <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
@@ -165,7 +170,7 @@
             </div>
             <div class="col-md-6 col-sm-12">
                 <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
-                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px;">
+                           HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px;" LegendPosition="C1.Chart.Position.None">
                     <SeriesCollection>
                         <Series Binding="grupo"></Series>
                     </SeriesCollection>
@@ -193,7 +198,6 @@
                             <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
                             <div class="col-sm-2">
                                 <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
-                                
                             </div>
                             <div class="col-sm-2">
                                 <PhButton Type="ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
@@ -237,9 +241,18 @@
                                         <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:20%;" />
                                     </PhTableColumnValues>
                                     <PhTableActions>
-                                        <PhButton Type="ButtonType.Primary" Size="ButtonSize.Small" Text="Ver Informe" />
+                                        <PhButton Type="ButtonType.Primary" @onclick="@(() => VerInforme(context))" Size="ButtonSize.Small" Text="Ver Informe" />
                                     </PhTableActions>
                                 </PhTable>
+                                <PhModal @ref="modalInformeSupervisor">
+                                    <Title>Informe Supervisor</Title>
+                                    <Body>
+                                        <iframe src="@PdfBase64" width="800" height="800" frameborder="0"></iframe>
+                                    </Body>
+                                    <Footer>
+                                        <PhButton Type="ButtonType.Danger" @onclick="() => modalInformeSupervisor.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                    </Footer>
+                                </PhModal>
                             </Body>
                             <Footer>
                                 <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
@@ -251,7 +264,7 @@
                     </Footer>
                 </PhModal>
             </div>
-            <div class="col-md-6 col-sm-12" style="text-indent: 298px;">
+            <div class="col-md-6 col-sm-12" style="text-align: center">
                 <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                 <PhModal @ref="modalRankingxPDS">
                     <Title>Ranking de Cumplimento de PDS</Title>
@@ -264,19 +277,18 @@
                             <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
                             <div class="col-sm-2">
                                 <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
-
                             </div>
                             <div class="col-sm-2">
                                 <PhButton Type="ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
                             </div>
                         </div>
-                        <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
+                        <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
                             <PhTableColumnHeaders>
                                 <PhTableColumn Style="width:30%;" Value="% Cumplimiento" IsHeader="true" />
                                 <PhTableColumn Style="width:20%;" Value="Cantidad PDS" IsHeader="true" />
                             </PhTableColumnHeaders>
                             <PhTableColumnValues>
-                                <PhTableColumn Value="@Convert.ToString(context.grupo)" Style="width:30%;text-align:center;vertical-align:middle;" />
+                                <PhTableColumn Value="@Convert.ToString(context.leyendaRango)" Style="width:30%;text-align:center;vertical-align:middle;" />
                                 <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
@@ -333,6 +345,7 @@
     private string EndPointObtieneRevisadosPorPDS { get; set; } = null!;
     private string EndPointObtieneRankingPDS { get; set; } = null!;
     private string EndPointPDSPorRango { get; set; } = null!;
+    private string EndPointInformeSupervisor { get; set; } = null!;
     LoginDTO login { get; set; } = null!;
     RegistroFormularioDTO pds { get; set; } = null!;
     RegistroFormularioDTO rankingPDS { get; set; } = null!;
@@ -343,6 +356,7 @@
     private PhModal? modalRankingxPDS { get; set; } = new();
     private PhModal? modalCuestionario { get; set; } = new();
     private PhModal? modalPdsRango { get; set; } = new();
+    private PhModal? modalInformeSupervisor { get; set; } = new();
     private int codigoPDS { get; set; } = 0;
     private string nombrePDS { get; set; } = string.Empty;
     private string nombrePDSRevisado { get; set; } = string.Empty;
@@ -363,6 +377,9 @@
     C1DatePicker _c1DatePickerHasta;
     private bool checkItemAll = false;
     string strSupervisor;
+    string nombreArchivo = string.Empty;
+    string archivoBase = string.Empty;
+    private string PdfBase64;
 
     protected override async void OnInitialized()
     {
@@ -370,7 +387,7 @@
 
         try
         {
-            strSupervisor = "fmorla";
+            strSupervisor = "glavayen";
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -414,7 +431,6 @@
             login = new LoginDTO();
         }
     }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -429,7 +445,6 @@
             await loader.Close();
         }
     }
-
     private async Task sendData()
     {
         await loader.Show();
@@ -437,6 +452,37 @@
         iconoMostrar = string.Empty;
         try
         {
+            //Valido que hayn subido una imagen
+            if (nombreArchivo == string.Empty)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir una foto",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            //Valido que todas las preguntas tengan respuesta
+            int preguntasSinRespuesta = 0;
+            preguntasSinRespuesta = preguntasList.Where(pr => pr.respuestaSupervisor == null).Count();
+
+            if (preguntasSinRespuesta > 0)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Todas las preguntas deben tener respuesta, por favor revise",
+                        Icon = "error"
+                    });
+                return;
+            }
+
             RegistroDTO listaEnviar = new RegistroDTO();
 
             List<RegistroFormularioDTO> registro = new List<RegistroFormularioDTO>();
@@ -465,6 +511,7 @@
             }
 
             listaEnviar.registro = registro;
+            listaEnviar.evidenciaRevision = archivoBase;
 
             var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionarioSupervisor)
                 {
@@ -534,7 +581,6 @@
                 });
         }
     }
-
     private async Task VerCuestionarios(ZonasPorSupervisorDTO dato)
     {
         try
@@ -555,13 +601,11 @@
             dato = new ZonasPorSupervisorDTO();
         }
     }
-
     private async Task CancelConfirm()
     {
         //this.OnInitialized();
         StateHasChanged();
     }
-
     private async Task VerFormulario(FormulariosporPOSDTO formulario)
     {
         try
@@ -593,7 +637,6 @@
             formulario = new FormulariosporPOSDTO();
         }
     }
-
     private async Task VerRevisados()
     {
         try
@@ -616,7 +659,6 @@
             throw new Exception(ex.Message.ToString());
         }
     }
-
     private async Task VerRevisadosxFecha()
     {
         try
@@ -650,7 +692,6 @@
             StateHasChanged();
         }
     }    
-
     private async Task VerRevisadosxPDS(ResumenGerencialZonasDTO datoPDS)
     {
         try
@@ -677,7 +718,6 @@
             throw new Exception(ex.Message.ToString());
         }
     }
-
     private async Task VerRanking()
     {
         try
@@ -690,7 +730,9 @@
             var result = await _httpClient.PostAsJsonAsync<RankingCumplimientoPDSDTO>
                (EndPointObtieneRankingPDS, datoEnviar);
 
-            _tableRankingPDS.Data = result.OrderByDescending(ob=>ob.grupo).ToArray();
+            //_tableRankingPDS.Data = result.OrderByDescending(ob=>ob.grupo).ToArray();
+
+            _tableRankingPDS.Data = result;
 
 
             await modalRankingxPDS.NewModal();
@@ -715,7 +757,9 @@
                (EndPointObtieneRankingPDS, datoEnviar);
 
             await loader.Show();
-            _tableRankingPDS.Data = result.OrderByDescending(ob => ob.grupo).ToArray();
+
+            //_tableRankingPDS.Data = result.OrderByDescending(ob => ob.grupo).ToArray();
+            _tableRankingPDS.Data = result;
             checkItemAll = false;
             await JSRuntime.InvokeVoidAsync("observeTableChanges", "rankingxFecha");
 
@@ -755,6 +799,66 @@
             throw new Exception(ex.Message.ToString());
         }
     }
-    
-    
+    private async Task SubirFoto(InputFileChangeEventArgs e)
+    {
+        //await loader.Show();
+        mensajeTransaccion = string.Empty;
+        iconoMostrar = string.Empty;
+        try
+        {
+            if(e.File==null)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir una foto",
+                        Icon = "error"
+                    });
+                return;
+            }
+            IBrowserFile imgFile = e.File;
+
+            nombreArchivo = imgFile.Name;
+
+            var buffers = new byte[imgFile.Size];
+            await imgFile.OpenReadStream().ReadAsync(buffers);
+            archivoBase = Convert.ToBase64String(buffers);
+
+
+        }
+        catch (HttpRequestException ex)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = ex.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
+    private async Task VerInforme(CalificacionCuestionariosPDSDTO formulario)
+    {
+        try
+        {
+            FormulariosporPOSDTO dtoEnviar = new FormulariosporPOSDTO();
+            dtoEnviar.codigoFormulario = long.Parse(formulario.codigoFormulario.ToString());
+            dtoEnviar.fechaRegistro = string.Empty;
+            string archivoBase64 = StoreService.ObtenerInformeSupervisor(dtoEnviar);
+            byte[] arregloArchivo = Convert.FromBase64String(archivoBase64);
+            var base64String = Convert.ToBase64String(arregloArchivo);
+            PdfBase64 = $"data:application/pdf;base64,{archivoBase64}";
+            
+            await modalInformeSupervisor.NewModal();
+        }
+        catch (Exception ex)
+        {
+
+            throw new Exception();
+        }
+    }
+
 }

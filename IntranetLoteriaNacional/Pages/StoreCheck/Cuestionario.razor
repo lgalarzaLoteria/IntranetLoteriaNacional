@@ -17,6 +17,10 @@
 
 <article class="art">
     <h1 class="tituloPagina">Cuestionario</h1>
+    @* <div class="form-group row" >
+        <label for="det" class="col-sm-2 col-form-label">Usuario Conectado:</label>
+        <label for="det" class="col-sm-2 col-form-label">@usuario</label>
+    </div> *@
     <div class="input-group" style="width: 45%;">
         <PhButton Type="ButtonType.Primary" @onclick="()=>modalConfirmacion.showModalConfirm()" Size="ButtonSize.Medium" Text="Guardar" />
     </div>
@@ -84,6 +88,7 @@
     private string EndPointSeccion { get; set; } = null!;
     string mensajeTransaccion = string.Empty;
     string iconoMostrar = string.Empty;
+    string usuario = string.Empty;
     public IEnumerable<PreguntasDTO> preguntasList;
     PreguntasDTO preguntasDTOForm = new PreguntasDTO();
     PreguntasDTO SaveValue = new PreguntasDTO();
@@ -108,6 +113,8 @@
     }
     protected async override void OnInitialized()
     {
+        usuario = await _session.GetItemAsync<string>("nombreUsuario"); 
+
         await CargarPreguntas();
 
         EndPointSeccion = EndPoints.listarSeccionesFormulario;
@@ -211,7 +218,7 @@
                 datoEnviar.codigoRegistro = 0;
                 datoEnviar.codigoFormulario = 0;
                 datoEnviar.codigoPDS = 0;
-                datoEnviar.codigoComisionista = "cparada";//await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuesta = item.repuestaPregunta;

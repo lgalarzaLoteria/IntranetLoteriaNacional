@@ -10,6 +10,9 @@ using System.Security.Policy;
 using RestSharp;
 using IntranetLoteriaNacional.Pages;
 using static LoteriaNacionalDominio.SeguridadDTO;
+using System.Diagnostics.Eventing.Reader;
+using Microsoft.AspNetCore.Mvc;
+using DevExpress.ClipboardSource.SpreadsheetML;
 
 
 namespace IntranetLoteriaNacional.Data
@@ -296,6 +299,27 @@ namespace IntranetLoteriaNacional.Data
             }
         }
 
+        public string ObtenerInformeSupervisor(FormulariosporPOSDTO dato)
+        {
+            string respuesta = string.Empty;
+            try
+            {
+                var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneInformeSupervisor");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                respuesta = response.Content.Substring(1, response.Content.Length - 2).Replace(@"\/", "/");
+                return respuesta.Trim();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+
         #endregion
         #region Jefe Comercial
         public List<ZonasPorSupervisorDTO> RecuperarDataCuestionariosPendientesZonasJefeComercial(LoginDTO login)
@@ -390,6 +414,26 @@ namespace IntranetLoteriaNacional.Data
                 }
 
                 return DataRankingPDS.ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        public string ObtenerInformeJefeVentas(FormulariosporPOSDTO dato)
+        {
+            string respuesta = string.Empty;
+            try
+            {
+                var jsonEnviar = JsonConvert.SerializeObject(dato);
+                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var request = new RestRequest("ObtieneInformeJefeVentas");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                respuesta = response.Content.Substring(1, response.Content.Length - 2).Replace(@"\/", "/");
+                return respuesta.Trim();
             }
             catch (Exception ex)
             {
