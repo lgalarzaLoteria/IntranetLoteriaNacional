@@ -387,7 +387,7 @@
 
         try
         {
-            strSupervisor = "glavayen";
+            strSupervisor = await _session.GetItemAsync<string>("codigoUsuario");//"glavayen";
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;

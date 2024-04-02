@@ -218,7 +218,8 @@
                 datoEnviar.codigoRegistro = 0;
                 datoEnviar.codigoFormulario = 0;
                 datoEnviar.codigoPDS = 0;
-                datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
+                //datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.codigoComisionista = await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuesta = item.repuestaPregunta;

@@ -115,9 +115,9 @@
 
                 if(rolUsuario=="Comisionista")
                 {
-                    LoginDTO login1 = new LoginDTO();
-                    login1.UserName = "lzambrano";
-                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login1);
+                    // LoginDTO login1 = new LoginDTO();
+                    // login1.UserName = "lzambrano";
+                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login);
                     PDSUsuario = respuestaPDSUsuario[0].NombreUsuario;
                 }  
 
