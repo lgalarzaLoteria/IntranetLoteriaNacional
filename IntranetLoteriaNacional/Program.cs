@@ -8,8 +8,20 @@ using Microsoft.AspNetCore.Http.Features;
 using IntranetLoteriaNacional.Shared.Constants;
 using CurrieTechnologies.Razor.SweetAlert2;
 using DevExpress.Blazor;
+using static System.Configuration.ConfigurationManager;
+using Microsoft.Extensions.Configuration;
+using NuGet.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+using IHost host = Host.CreateDefaultBuilder(args).Build();
+
+IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
+
+string? _urlServicio = config.GetValue<string>("DefaultAPI_URL");
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -28,7 +40,7 @@ if (!builder.Services.Any(x => x.ServiceType == typeof(HttpClient)))
         var uriHelper = s.GetRequiredService<NavigationManager>();
         return new HttpClient
         {
-            BaseAddress = new Uri("http://jbg15pp03/APILoteriaNacional/api/")
+            BaseAddress = new Uri(_urlServicio)
         };
     });
 }

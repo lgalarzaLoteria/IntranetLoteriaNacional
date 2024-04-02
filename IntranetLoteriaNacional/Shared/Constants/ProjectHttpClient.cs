@@ -48,7 +48,8 @@ namespace IntranetLoteriaNacional.Shared.Constants
             catch (Exception ex)
             {
 
-                throw;
+                //throw;
+                return JsonConvert.DeserializeObject<T[]>(string.Empty)!;
             }
 
         }

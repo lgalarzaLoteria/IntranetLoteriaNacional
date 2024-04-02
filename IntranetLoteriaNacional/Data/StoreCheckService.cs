@@ -111,7 +111,7 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
-                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerRankingPDS;
+                //EndPointStr = "http://jbg15pp03/ServiciosAPILN/api/" + EndPoints.obtenerRankingPDS;
 
                 //var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
                 //request.Method = "POST";
