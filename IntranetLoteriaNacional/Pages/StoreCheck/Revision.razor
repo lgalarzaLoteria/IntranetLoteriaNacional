@@ -387,7 +387,7 @@
 
         try
         {
-            strSupervisor = await _session.GetItemAsync<string>("codigoUsuario");//"glavayen";
+            strSupervisor = "glavayen";//await _session.GetItemAsync<string>("codigoUsuario");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -427,7 +427,6 @@
         }
         catch (Exception ex)
         {
-
             login = new LoginDTO();
         }
     }
@@ -597,7 +596,6 @@
         }
         catch (Exception ex)
         {
-
             dato = new ZonasPorSupervisorDTO();
         }
     }
@@ -633,7 +631,6 @@
         }
         catch (Exception ex)
         {
-
             formulario = new FormulariosporPOSDTO();
         }
     }
@@ -856,7 +853,6 @@
         }
         catch (Exception ex)
         {
-
             throw new Exception();
         }
     }

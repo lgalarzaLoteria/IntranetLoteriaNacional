@@ -385,7 +385,7 @@
         EndPointStr = EndPoints.obtenerZonasPorJefeComercial;
         try
         {
-            strJefeComercial = await _session.GetItemAsync<string>("codigoUsuario");//"jbeltran";
+            strJefeComercial = "jbeltran";//await _session.GetItemAsync<string>("codigoUsuario");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -405,7 +405,6 @@
         }
         catch (Exception ex)
         {
-
             login = new LoginDTO();
         }
 
@@ -440,7 +439,6 @@
         }
         catch (Exception ex)
         {
-
             dato = new ZonasPorSupervisorDTO();
         }
     }
@@ -476,7 +474,6 @@
         }
         catch (Exception ex)
         {
-
             formulario = new FormulariosporPOSDTO();
         }
     }
@@ -682,7 +679,7 @@
             datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
             datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
 
-            EndPointObtieneRevisadosPorPDS = EndPoints.obtenerCalificacioCustionariosporPDS;
+            EndPointObtieneRevisadosPorPDS = EndPoints.obtenerCalificacioCustionariosporPDSJefeComercial;
 
             var result = await _httpClient.PostAsJsonAsync<CalificacionCuestionariosPDSDTO>
                (EndPointObtieneRevisadosPorPDS, datoEnviar);
@@ -835,7 +832,6 @@
         }
         catch (Exception ex)
         {
-
             throw new Exception();
         }
     }

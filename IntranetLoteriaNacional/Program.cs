@@ -22,7 +22,6 @@ IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
 
 string? _urlServicio = config.GetValue<string>("DefaultAPI_URL");
 
-
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();

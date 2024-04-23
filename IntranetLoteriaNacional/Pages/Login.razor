@@ -89,6 +89,36 @@
         login.Password = Password;
         try
         {
+            if (Username == string.Empty || Username == null)
+            {
+                Message = "Debe ingresar el usuario";
+                await loader.Close();
+                _isInvalid = true;
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = Message,
+                        Icon = "info"
+                    });
+                return;
+            }
+
+            if (Password == string.Empty || Password == null)
+            {
+                Message = "Debe ingresar la clave";
+                await loader.Close();
+                _isInvalid = true;
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = Message,
+                        Icon = "info"
+                    });
+                return;
+            }
+
             var existeUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.validarUsuario,login);
 
             if(existeUsuario!=null)
@@ -115,9 +145,9 @@
 
                 if(rolUsuario=="Comisionista")
                 {
-                    // LoginDTO login1 = new LoginDTO();
-                    // login1.UserName = "lzambrano";
-                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login);
+                    LoginDTO login1 = new LoginDTO();
+                    login1.UserName = "lzambrano";
+                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login1);
                     PDSUsuario = respuestaPDSUsuario[0].NombreUsuario;
                 }  
 

@@ -26,19 +26,28 @@ namespace IntranetLoteriaNacional.Data
         ZonasPorSupervisorDTO[] dataCuentionariosPendientesZona;
         TiempoRevisionDTO[] tiempoRevisionJefeComercial;
 
-
         public List<ZonasInfo> Zonas;
         public List<SupervisoresInfo> Supervisores;
         public List<CalificacionCuestionariosPDSDTO>? pdsPorRango;
         public List<ZonasPorSupervisorDTO> cuestionariosPendientesZona;
         public List<ResumenGerencialZonasDTO> cuestionariosRevisadosPDSSupervisor;
 
+        private readonly IConfiguration _configuration;
+        private string urlInjection = string.Empty;
+
+        public StoreCheckService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            urlInjection = _configuration.GetValue<string>("URLInyection");
+        }
+
         public List<ZonasInfo> RecuperarDataResumenZonas()
         {
             try
             {
-                EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerResumenGerencialZonas;
-     
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerResumenGerencialZonas;
+                EndPointStr = urlInjection + EndPoints.obtenerResumenGerencialZonas;
+
                 var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
                 request.Method = "POST";
                 request.ContentType = "application/json";
@@ -74,7 +83,8 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
-                EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerResumenGerencialZonas;
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtenerResumenGerencialZonas;
+                EndPointStr = urlInjection + EndPoints.obtenerResumenGerencialZonas;
 
                 var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
                 request.Method = "POST";
@@ -111,29 +121,9 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
-                //EndPointStr = "http://jbg15pp03/ServiciosAPILN/api/" + EndPoints.obtenerRankingPDS;
-
-                //var request = (HttpWebRequest)WebRequest.Create(EndPointStr);
-                //request.Method = "POST";
-                //request.ContentType = "application/json";
-                //request.Accept = "application/json";
-
-                //using (WebResponse response = request.GetResponse())
-                //{
-                //    using (Stream strReader = response.GetResponseStream())
-                //    {
-                //        if (strReader == null) return new List<RankingCumplimientoPDSInfo>();
-                //        using (StreamReader objReader = new StreamReader(strReader))
-                //        {
-                //            string responseBody = objReader.ReadToEnd();
-                //            var bobyRespuesta = JsonConvert.DeserializeObject<RespuestaDTO>(responseBody)!;
-                //            DataRankingPDS = JsonConvert.DeserializeObject<RankingCumplimientoPDSInfo[]>(bobyRespuesta.Body)!;
-
-                //        }
-                //    }
-                //}
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneRankingPDS");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -170,7 +160,8 @@ namespace IntranetLoteriaNacional.Data
                 datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
                 datoConsultar.cantidadPDS = "0";
                 var jsonEnviar = JsonConvert.SerializeObject(datoConsultar);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtienePDSPorRangoCumplimiento");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -204,7 +195,8 @@ namespace IntranetLoteriaNacional.Data
             {
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(login);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneZonasPorSupervisor");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -238,7 +230,8 @@ namespace IntranetLoteriaNacional.Data
             {
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneRevisadosPorSupervisor");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -273,7 +266,8 @@ namespace IntranetLoteriaNacional.Data
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
                 
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneRankingPDSPorSupervisor");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -305,7 +299,8 @@ namespace IntranetLoteriaNacional.Data
             try
             {
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneInformeSupervisor");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -328,7 +323,8 @@ namespace IntranetLoteriaNacional.Data
             {
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(login);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneZonasPorJefeComercial");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -361,7 +357,8 @@ namespace IntranetLoteriaNacional.Data
             {
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneRevisadosPorJefeComercial");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -395,7 +392,8 @@ namespace IntranetLoteriaNacional.Data
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
 
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneRankingPDSPorJefeComercial");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -426,7 +424,8 @@ namespace IntranetLoteriaNacional.Data
             try
             {
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneInformeJefeVentas");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");
@@ -471,7 +470,8 @@ namespace IntranetLoteriaNacional.Data
                 //}
 
                 //var jsonEnviar = JsonConvert.SerializeObject(dato);
-                var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
                 var request = new RestRequest("ObtieneDiasRetrasoRevisionJefeComercial");
                 request.Method = Method.Post;
                 request.AddHeader("Accept", "application/json");

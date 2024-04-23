@@ -36,42 +36,46 @@
             <label for="det" class="col-sm-1 col-form-label col-form-label-lg" style="color:var(--ph-skyblue)">No</label>
         </div>
     </div>
-    <ul class="nav flex-column">
-        @if (Data != null)
-        {
-            int count = 1;
-            @foreach (var seccion in Data)
+    <div style="max-height: 550px;margin: 10px;overflow:auto">
+        <ul class="nav flex-column">
+            @if (Data != null)
             {
-                <li class="nav-item">
-                    <NavLink class="nav-link">
-                        <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
-                        @{string nombrePanel = "nav" + seccion.nombreSeccion;}
-                         <table class="table">
-                             <tbody>
-                                @if (preguntasList != null)
-                                {
-                                    foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                int count = 1;
+                @foreach (var seccion in Data)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link">
+                            <a class="nav-link" aria-current="page" style="color:var(--ph-skyblue)">@seccion.nombreSeccion</a>
+                            @{
+                                string nombrePanel = "nav" + seccion.nombreSeccion;
+                            }
+                            <table class="table">
+                                <tbody>
+                                    @if (preguntasList != null)
                                     {
-                                        string nombreRadioButton = "radio" + count.ToString();
-                                      <tr>
-                                          <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
-                                            <td width="4%">
-                                                <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = true)" />
-                                            </td>
-                                            <td width="6%">
-                                                <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
-                                            </td>
-                                      </tr>
-                                        count++;
+                                        foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                        {
+                                            string nombreRadioButton = "radio" + count.ToString();
+                                            <tr>
+                                                <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                <td width="4%">
+                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = true)" />
+                                                </td>
+                                                <td width="6%">
+                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
+                                                </td>
+                                            </tr>
+                                            count++;
+                                        }
                                     }
-                                }
-                             </tbody>
-                         </table>
-                    </NavLink>
-                </li>
+                                </tbody>
+                            </table>
+                        </NavLink>
+                    </li>
+                }
             }
-        }
-    </ul>
+        </ul>
+    </div>
     <div>
         <PhConfirmacion @ref="modalConfirmacion" onClickCancel="CancelConfirm" title="Confirmación" content="¿Está seguro de guardar el cuestionario?" OnClickExec="sendData">
         </PhConfirmacion>
@@ -218,8 +222,8 @@
                 datoEnviar.codigoRegistro = 0;
                 datoEnviar.codigoFormulario = 0;
                 datoEnviar.codigoPDS = 0;
-                //datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
-                datoEnviar.codigoComisionista = await _session.GetItemAsync<string>("codigoUsuario");
+                datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
+                //datoEnviar.codigoComisionista = await _session.GetItemAsync<string>("codigoUsuario");
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuesta = item.repuestaPregunta;
