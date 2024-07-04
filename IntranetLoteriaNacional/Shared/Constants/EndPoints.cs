@@ -47,6 +47,9 @@
         public static string obtenerInformeSupervisor = "StoreCheck/ObtieneInformeSupervisor";
         public static string obtenerInformeJefeVentas = "StoreCheck/ObtieneInformeJefeVentas";
 
+        public static string mantenimientoObtieneUbicacionPDS = "StoreCheck/MantenimientoObtieneUbicacionPDS";
+        public static string mantenimientoGrabarUbicacionPDS = "StoreCheck/MantenimientoGrabarUbicacionPDS";
+
 
         #endregion
 

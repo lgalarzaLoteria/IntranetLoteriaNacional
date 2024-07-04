@@ -14,6 +14,11 @@
 @using C1.Blazor.Chart
 @using C1.Blazor.DateTimeEditors
 @using C1.Blazor.Input
+@using System.Text.Json.Nodes
+@using Microsoft.Extensions.Configuration;
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+
 
 @inject ProjectHttpClient _httpClient
 @inject ILocalStorageService _session
@@ -21,6 +26,8 @@
 @inject SweetAlertService Swal
 @inject StoreCheckService StoreService
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+
 
 <style>
     .column {
@@ -380,6 +387,10 @@
     string nombreArchivo = string.Empty;
     string archivoBase = string.Empty;
     private string PdfBase64;
+    decimal latitud = 0;
+    decimal longitud = 0;
+    string direccion = string.Empty;
+
 
     protected override async void OnInitialized()
     {
@@ -387,7 +398,7 @@
 
         try
         {
-            strSupervisor = "glavayen";//await _session.GetItemAsync<string>("codigoUsuario");
+            strSupervisor = await _session.GetItemAsync<string>("codigoUsuario");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -442,7 +453,14 @@
             }
 
             await loader.Close();
+            var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
+            longitud = Convert.ToDecimal(result[0].ToString().Replace('.', ','));
+            latitud = Convert.ToDecimal(result[1].ToString().Replace('.', ','));
+            await EncontrarDireccionMaps(latitud.ToString(), longitud.ToString());
+
         }
+
+
     }
     private async Task sendData()
     {
@@ -511,6 +529,9 @@
 
             listaEnviar.registro = registro;
             listaEnviar.evidenciaRevision = archivoBase;
+            listaEnviar.latitudEvidencia = latitud;
+            listaEnviar.longitudEvidencia = longitud;
+            listaEnviar.direccionEvidencia = direccion;
 
             var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionarioSupervisor)
                 {
@@ -823,6 +844,8 @@
             archivoBase = Convert.ToBase64String(buffers);
 
 
+
+
         }
         catch (HttpRequestException ex)
         {
@@ -848,12 +871,27 @@
             byte[] arregloArchivo = Convert.FromBase64String(archivoBase64);
             var base64String = Convert.ToBase64String(arregloArchivo);
             PdfBase64 = $"data:application/pdf;base64,{archivoBase64}";
-            
+
             await modalInformeSupervisor.NewModal();
         }
         catch (Exception ex)
         {
             throw new Exception();
+        }
+    }
+    private async Task EncontrarDireccionMaps(string latitud, string longitud)
+    {
+        string MyMapsApiKey = Configuration.GetValue<string>("KeyGoogleMaps");
+
+        using (HttpClient cliente = new HttpClient())
+        {
+            string urlApi = string.Concat("https://maps.googleapis.com/maps/api/geocode/json?latlng=", latitud.Replace(',', '.'), ",", longitud.Replace(',', '.'), "&key=", MyMapsApiKey);
+
+            var response = cliente.GetAsync(urlApi).Result;
+
+            string json = await response.Content.ReadAsStringAsync();
+            var data = (JObject)JsonConvert.DeserializeObject(json);
+            direccion = data.SelectToken("results").ToList().FirstOrDefault().SelectToken("formatted_address").ToString();
         }
     }
 

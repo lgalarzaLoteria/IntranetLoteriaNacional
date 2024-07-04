@@ -10,12 +10,19 @@
 @using LoteriaNacionalDominio
 @using System.Net
 @using static LoteriaNacionalDominio.SeguridadDTO
+@using System.Text.Json.Nodes
+@using Microsoft.Extensions.Configuration;
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using static LoteriaNacionalDominio.StoreCheckDTO
 
 
 @inject NavigationManager _navigation
 @inject ILocalStorageService _session
 @inject ProjectHttpClient _httpClient
 @inject SweetAlertService Swal
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
 
 <style>
     #div__container {
@@ -40,7 +47,7 @@
     }
 </style>
 
-<div id="div__container">
+<div id="div__container" style="text-align:center">
     <div id="div__login-container">
         <div style="padding: 20px; background-color: white;">
             <img style="width: 200px" src="./images/loterialogo.png" />
@@ -64,6 +71,9 @@
     public string Password { get; set; } = null!;
     public string Message { get; set; } = null!;
     private bool _isInvalid;
+    decimal latitud = 0;
+    decimal longitud = 0;
+    string direccion = string.Empty;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -76,6 +86,10 @@
                 _navigation.NavigateTo("~/Home/Home");
             }
             await loader.Close();
+            var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
+            longitud = Convert.ToDecimal(result[0].ToString().Replace('.', ','));
+            latitud = Convert.ToDecimal(result[1].ToString().Replace('.', ','));
+            await EncontrarDireccionMaps(latitud.ToString(), longitud.ToString());
 
         }
     }
@@ -123,8 +137,51 @@
 
             if(existeUsuario!=null)
             {
-                var respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login);
+                string dominioUsuarioLogueado = existeUsuario[0].NombreUsuario;
+                string nombreUsuario = dominioUsuarioLogueado.Substring(0, dominioUsuarioLogueado.LastIndexOf("-"));
+                string nombreDominioUsuario = dominioUsuarioLogueado.Substring((dominioUsuarioLogueado.LastIndexOf("-") + 1), (dominioUsuarioLogueado.Length - (dominioUsuarioLogueado.LastIndexOf("-") + 1)));
 
+
+                string PDSUsuario = string.Empty;
+                MenuDTO[] respuestaRolUsuario = new MenuDTO[1];
+                if (nombreDominioUsuario == "PDS")
+                {
+                    //Inventario de PDS Geolocalizacion
+                    GeolocalizacionDTO geolocalizacionPDS = new GeolocalizacionDTO();
+                    geolocalizacionPDS.secuencial = 0;
+                    geolocalizacionPDS.latitudPDS = latitud;
+                    geolocalizacionPDS.longitudPDS = longitud;
+                    geolocalizacionPDS.direccionPDS = direccion;
+                    geolocalizacionPDS.usuarioTransaccion = login.UserName;
+                    geolocalizacionPDS.equipoTransaccion = "Sistemas";
+
+                    LoginDTO login1 = new LoginDTO();
+                    login1.UserName = "comisionista";
+                    login.UserName = "lzambrano";
+                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<RespuestaPDSDTO>(EndPoints.obtienePDSUsuario, login);
+                    PDSUsuario = respuestaPDSUsuario[0].nombrePDS;
+                    geolocalizacionPDS.codigoPDS = respuestaPDSUsuario[0].codigoPDS;
+
+                    respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login1);
+                    
+
+                    var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.mantenimientoGrabarUbicacionPDS)
+                        {
+                            Content = JsonContent.Create(geolocalizacionPDS)
+                        };
+
+                    var postResponse = await _httpClient.SendAsync(postRequest);
+
+
+
+                }
+                else
+                {
+                    respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login);
+                }
+
+                string rolUsuario = respuestaRolUsuario[0].nombreRol;
+                
                 if(respuestaRolUsuario == null)
                 {
                     Message = "Usuario no tiene rol de acceso en el sistema, por favor comuníquese con el administrador";
@@ -140,18 +197,9 @@
                         return;
                 }
 
-                string rolUsuario = respuestaRolUsuario[0].nombreRol;
-                string PDSUsuario = string.Empty;
+                  
 
-                if(rolUsuario=="Comisionista")
-                {
-                    LoginDTO login1 = new LoginDTO();
-                    login1.UserName = "lzambrano";
-                    var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.obtienePDSUsuario, login1);
-                    PDSUsuario = respuestaPDSUsuario[0].NombreUsuario;
-                }  
-
-                await _session.SetItemAsync("nombreUsuario", existeUsuario[0].NombreUsuario);
+                await _session.SetItemAsync("nombreUsuario", nombreUsuario);
                 await _session.SetItemAsync("codigoUsuario", login.UserName);
                 await _session.SetItemAsync("PDSUsuario", PDSUsuario);
                 await _session.SetItemAsync("RolUsuario", rolUsuario);
@@ -234,6 +282,21 @@
         }
     }
     
+    private async Task EncontrarDireccionMaps(string latitud, string longitud)
+    {
+        string MyMapsApiKey = Configuration.GetValue<string>("KeyGoogleMaps");
+
+        using (HttpClient cliente = new HttpClient())
+        {
+            string urlApi = string.Concat("https://maps.googleapis.com/maps/api/geocode/json?latlng=", latitud.Replace(',', '.'), ",", longitud.Replace(',', '.'), "&key=", MyMapsApiKey);
+
+            var response = cliente.GetAsync(urlApi).Result;
+
+            string json = await response.Content.ReadAsStringAsync();
+            var data = (JObject)JsonConvert.DeserializeObject(json);
+            direccion = data.SelectToken("results").ToList().FirstOrDefault().SelectToken("formatted_address").ToString();
+        }
+    }
 }
 
 

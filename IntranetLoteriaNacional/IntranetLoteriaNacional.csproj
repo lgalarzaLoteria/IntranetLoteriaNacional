@@ -29,16 +29,16 @@
     <PackageReference Include="System.CodeDom" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="LoteriaNacionalDominio">
-      <HintPath>..\..\LoteriaNacionalDominio\LoteriaNacionalDominio\bin\Release\net6.0\LoteriaNacionalDominio.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Update="Shared\Table\PhTable.razor">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="IntranetLoteriaNacional.gclicx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="LoteriaNacionalDominio">
+      <HintPath>..\..\LoteriaNacionalDominio\LoteriaNacionalDominio\bin\Release\net6.0\LoteriaNacionalDominio.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

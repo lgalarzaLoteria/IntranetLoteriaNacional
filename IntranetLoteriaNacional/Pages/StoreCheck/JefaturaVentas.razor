@@ -385,7 +385,7 @@
         EndPointStr = EndPoints.obtenerZonasPorJefeComercial;
         try
         {
-            strJefeComercial = "jbeltran";//await _session.GetItemAsync<string>("codigoUsuario");
+            strJefeComercial = await _session.GetItemAsync<string>("codigoUsuario");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;

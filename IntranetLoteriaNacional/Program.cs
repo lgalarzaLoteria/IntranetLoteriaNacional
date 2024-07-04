@@ -30,6 +30,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddSweetAlert2();
 builder.Services.AddSingleton<StoreCheckService>();
 builder.Services.AddDevExpressBlazor(configure => configure.BootstrapVersion = BootstrapVersion.v5);
+//builder.Services.AddSignalR();
 
 /***Servicio para peticiones livianas***/
 if (!builder.Services.Any(x => x.ServiceType == typeof(HttpClient)))
@@ -78,5 +79,7 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+//app.UseWebSockets();
 
 app.Run();
