@@ -14,6 +14,7 @@
 @using Microsoft.Extensions.Configuration;
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
+@using System.Globalization
 @using static LoteriaNacionalDominio.StoreCheckDTO
 
 
@@ -71,8 +72,8 @@
     public string Password { get; set; } = null!;
     public string Message { get; set; } = null!;
     private bool _isInvalid;
-    decimal latitud = 0;
-    decimal longitud = 0;
+    string latitud = string.Empty;
+    string longitud = string.Empty;
     string direccion = string.Empty;
 
 
@@ -87,9 +88,28 @@
             }
             await loader.Close();
             var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
-            longitud = Convert.ToDecimal(result[0].ToString().Replace('.', ','));
-            latitud = Convert.ToDecimal(result[1].ToString().Replace('.', ','));
-            await EncontrarDireccionMaps(latitud.ToString(), longitud.ToString());
+            longitud = result[0].ToString().Replace('.', ',');
+            latitud = result[1].ToString().Replace('.', ',');
+
+            bool latitudContieneComa = latitud.Contains(",");
+            if (latitudContieneComa)
+                latitud = latitud.Replace(',', '.');
+
+            bool longitudContieneComa = longitud.Contains(",");
+            if (longitudContieneComa)
+                longitud = longitud.Replace(',', '.');
+
+
+            // await Swal.FireAsync(new SweetAlertOptions
+            //     {
+            //         ConfirmButtonColor = "var(--ph-skyblue)",
+            //         Title = "Intranet Lotería Nacional",
+            //         Text = string.Concat(latitudStr, "/", longitudStr),
+            //         Icon = "info"
+            //     });
+
+            
+            await EncontrarDireccionMaps(latitud, longitud);
 
         }
     }
@@ -171,9 +191,6 @@
                         };
 
                     var postResponse = await _httpClient.SendAsync(postRequest);
-
-
-
                 }
                 else
                 {
@@ -288,7 +305,7 @@
 
         using (HttpClient cliente = new HttpClient())
         {
-            string urlApi = string.Concat("https://maps.googleapis.com/maps/api/geocode/json?latlng=", latitud.Replace(',', '.'), ",", longitud.Replace(',', '.'), "&key=", MyMapsApiKey);
+            string urlApi = string.Concat("https://maps.googleapis.com/maps/api/geocode/json?latlng=", latitud, ",", longitud, "&key=", MyMapsApiKey);
 
             var response = cliente.GetAsync(urlApi).Result;
 

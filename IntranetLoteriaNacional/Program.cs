@@ -12,6 +12,7 @@ using static System.Configuration.ConfigurationManager;
 using Microsoft.Extensions.Configuration;
 using NuGet.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using C1.Blazor.Chart;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,7 @@ builder.WebHost.UseWebRoot("wwwroot");
 builder.WebHost.UseStaticWebAssets();
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
