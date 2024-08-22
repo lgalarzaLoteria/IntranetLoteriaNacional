@@ -1,4 +1,4 @@
-﻿@page "/Maintenance/Aplicaciones"
+﻿@page "/Maintenance/ElementosTI"
 
 @using Blazored.LocalStorage
 @using IntranetLoteriaNacional.Shared.ComponentModels
@@ -8,7 +8,6 @@
 @using LoteriaNacionalDominio
 @using static LoteriaNacionalDominio.MantenimientoDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
-
 
 @inject ILocalStorageService _session
 @inject NavigationManager _navigation
@@ -29,18 +28,18 @@
 </style>
 
 <article class="art">
-    <h1 class="tituloPagina">Aplicaciones</h1>
+    <h1 class="tituloPagina">Elementos TI</h1>
     <div class="input-group" style="width: 45%;">
-        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="New" Size="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonSize.Medium" Text="Agregar" />
     </div>
-    <PhModal @ref="modalAplicacion">
-        <Title>Aplicación</Title>
+    <PhModal @ref="modalElementosTI">
+        <Title>Sección</Title>
         <Body>
-            <EditForm Model="aplicacionDTOForm">
+            <EditForm Model="elementosTIDTOForm">
                 <div class="form-group row" style="margin-bottom:2%;">
-                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Aplicación</label>
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Elementos TI</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="aplicacionDTOForm.nombreAplicacion" placeholder="Ingrese el nombre de la aplicación">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="elementosTIDTOForm.nombreElementoIT" placeholder="Ingrese el nombre">
                     </div>
                 </div>
                 <div class="form-group row" style="margin-bottom:2%;">
@@ -49,8 +48,8 @@
                     </div>
                     <div class="col-sm-2">
                         <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
-                            <input class="form-check-input" @bind-value="@aplicacionDTOForm.estadoAplicacion" checked="@aplicacionDTOForm.estadoAplicacion" type="checkbox" id="flexSwitchCheckChecked">
-                            @if (@aplicacionDTOForm.estadoAplicacion == true)
+                            <input class="form-check-input" @bind-value="@elementosTIDTOForm.estadoElementoIT" checked="@elementosTIDTOForm.estadoElementoIT" type="checkbox" id="flexSwitchCheckChecked">
+                            @if (@elementosTIDTOForm.estadoElementoIT == true)
                             {
                                 <label class="form-check-label" for="flexSwitchCheckChecked">Activo</label>
                             }
@@ -64,36 +63,35 @@
             </EditForm>
         </Body>
         <Footer>
-            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
-            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalAplicacion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalElementosTI.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
         </Footer>
     </PhModal>
     <div>
         <br />
-        <PhTable @ref="_table" TPost="AplicacionDTO" isRefresh="true" TReturn="AplicacionDTO" Body="new AplicacionDTO()" EndPoint="@EndPointStr"
+        <PhTable @ref="_table" TPost="ElementosTIDTO" isRefresh="true" TReturn="ElementosTIDTO" Body="new ElementosTIDTO()" EndPoint="@EndPointStr"  
                  SearchDefinition="@(new[]
                  {
-                    "nombreAplicacion",
-                    "descripcionEstadoAplicacion"
+                    "nombreElementoIT",
+                    "descripcionEstadoElementoTI"
                  })">
             <PhTableColumnHeaders>
-                <PhTableColumn Style="width:40%;" Value="Nombre Aplicación" IsHeader="true" />
-                <PhTableColumn Style="width:20%;" Value="Estado de la Aplicación" IsHeader="true" />
+                <PhTableColumn Style="width:40%;" Value="Nombre Elemento TI" IsHeader="true" />
+                <PhTableColumn Style="width:20%;" Value="Estado Elemento TI" IsHeader="true" />
             </PhTableColumnHeaders>
             <PhTableColumnValues>
-                <PhTableColumn Value="@context.nombreAplicacion" Style="width:40%;" />
-                @if (context.estadoAplicacion == true)
+                <PhTableColumn Value="@context.nombreElementoIT" Style="width:40%;" />
+                @if (context.estadoElementoIT == true)
                 {
-                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
+                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoElementoTI" />
                 }
                 else
                 {
-                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
+                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoElementoTI" />
                 }
             </PhTableColumnValues>
             <PhTableActions>
                 <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
-
             </PhTableActions>
 
         </PhTable>
@@ -105,19 +103,20 @@
     <Loading @ref="loader"></Loading>
 </article>
 
+
 @code {
     Loading loader { get; set; } = new();
 
-    private PhTable<AplicacionDTO, AplicacionDTO>? _table = new();
-    private PhModal? modalAplicacion { get; set; } = new();
+    private PhTable<ElementosTIDTO, ElementosTIDTO>? _table = new();
+    private PhModal? modalElementosTI { get; set; } = new();
     private PhNotification modalNotification { get; set; } = new();
-    AplicacionDTO aplicacionDTOForm = new AplicacionDTO();
-    AplicacionDTO AplicacionDTO { get; set; } = null!;
+    ElementosTIDTO elementosTIDTOForm = new ElementosTIDTO();
+    ElementosTIDTO elementosTIDTO { get; set; } = null!;
     private string EndPointStr { get; set; } = null!;
 
     protected override async void OnInitialized()
     {
-        EndPointStr = EndPoints.obtenerAplicaciones;
+        EndPointStr = EndPoints.obtenerElementosTI;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -126,7 +125,7 @@
         {
             var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
             Validate validate = new Validate();
-            if (!validate.isValid("./Maintenance/Aplicaciones", item))
+            if (!validate.isValid("./Maintenance/ElementosTI", item))
             {
                 _navigation.NavigateTo("./Home/Error");
             }
@@ -136,10 +135,10 @@
 
     private async Task New()
     {
-        aplicacionDTOForm = new AplicacionDTO();
-        aplicacionDTOForm.estadoAplicacion = true;
-        aplicacionDTOForm.codigoAplicacion = 0;
-        await modalAplicacion.NewModal();
+        elementosTIDTOForm = new ElementosTIDTO();
+        elementosTIDTOForm.estadoElementoIT = true;
+        elementosTIDTOForm.codigoElementoIT = 0;
+        await modalElementosTI.NewModal();
     }
 
     private async Task sendData()
@@ -150,10 +149,10 @@
 
         try
         {
-            if (aplicacionDTOForm.nombreAplicacion == null || aplicacionDTOForm.nombreAplicacion == string.Empty)
+            if (elementosTIDTOForm.nombreElementoIT == null || elementosTIDTOForm.nombreElementoIT == string.Empty)
             {
                 await loader.Close();
-                mensajeTransaccion = "El nombre de la aplicación debe ser ingresado";
+                mensajeTransaccion = "El nombre del elemento de TI debe ser ingresado";
                 iconoMostrar = "error";
                 await Swal.FireAsync(new SweetAlertOptions
                     {
@@ -165,12 +164,13 @@
                 return;
             }
 
-            aplicacionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
-            aplicacionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+            
+            elementosTIDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            elementosTIDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
 
-            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarAplicaciones)
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarElementosTI)
                 {
-                    Content = JsonContent.Create(aplicacionDTOForm)
+                    Content = JsonContent.Create(elementosTIDTOForm)
                 };
             var postResponse = await _httpClient.SendAsync(postRequest);
             if (postResponse.IsSuccessStatusCode)
@@ -187,7 +187,7 @@
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "error";
                 }
-                await modalAplicacion.CloseModal();
+                await modalElementosTI.CloseModal();
                 await loader.Close();
             }
             else
@@ -195,7 +195,7 @@
                 //await modalNotification.ErrorModal("Error de servicio");
                 mensajeTransaccion = "Error de servicio";
                 iconoMostrar = "error";
-                await modalAplicacion.CloseModal();
+                await modalElementosTI.CloseModal();
                 await loader.Close();
             }
 
@@ -211,15 +211,15 @@
         catch (HttpRequestException e)
         {
             await modalNotification.ErrorModal(e.Message.ToString());
-            await modalAplicacion.CloseModal();
+            await modalElementosTI.CloseModal();
             await loader.Close();
         }
     }
 
-    private async Task Update(AplicacionDTO aplicacionDTO)
+    private async Task Update(ElementosTIDTO elementoTIDTO)
     {
-        aplicacionDTOForm = aplicacionDTO;
-        await modalAplicacion.UpdateModal();
+        elementosTIDTOForm = elementoTIDTO;
+        await modalElementosTI.UpdateModal();
         StateHasChanged();
     }
 

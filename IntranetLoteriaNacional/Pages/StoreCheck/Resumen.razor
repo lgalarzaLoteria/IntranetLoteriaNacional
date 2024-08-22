@@ -72,7 +72,7 @@
                         <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
                     </PhTableColumnValues>
                     <PhTableActions>
-                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
                     </PhTableActions>
                 </PhTable>
                 <PhModal @ref="modalCuestionarios">
@@ -94,7 +94,7 @@
                                 <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
-                                <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
                             </PhTableActions>
                         </PhTable>
                         <PhModal @ref="modalFormulario">
@@ -131,17 +131,17 @@
                                 </PhTable>
                             </Body>
                             <Footer>
-                                <PhButton Type="ButtonType.Danger" @onclick="() => modalFormulario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalFormulario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                             </Footer>
                         </PhModal>
                     </Body>
                     <Footer>
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
             </Body>
             <Footer>
-                <PhButton Type="ButtonType.Danger" @onclick="() => modalResumen.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalResumen.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
             </Footer>
         </PhModal>
     </div>

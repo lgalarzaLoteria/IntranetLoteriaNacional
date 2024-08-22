@@ -74,9 +74,9 @@
                 </FlexChart>
             </div>
             <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Column" Stacking="Stacking.None" Palette="Palette.Standard"
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Column" Stacking="Stacking.None" Palette="C1.Chart.Palette.Standard"
                            HeaderContent="Revisión de cuestionarios" HeaderStyle="font-size:15px"
-                           LegendPosition="Position.Bottom" LegendStyle="font-size:15px"
+                           LegendPosition="C1.Chart.Position.Bottom" LegendStyle="font-size:15px"
                            BindingX="nombreUsuario" ItemsSource="dataTiempoRevision">
                     <SeriesCollection>
                         <Series Name="A Tiempo" Binding="revisadosATiempo" />
@@ -87,7 +87,7 @@
         </div>
         <div class="row">
             <div class="col-md-6 col-sm-12" style="text-indent: 298px;">
-                <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                 <PhModal @ref="modalRankingxPDS">
                     <Title>Ranking de Cumplimento de PDS</Title>
                      <Body>
@@ -101,7 +101,7 @@
                                 <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
-                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
                             </PhTableActions>
                         </PhTable>
                         <PhModal @ref="modalPdsRango">
@@ -119,12 +119,12 @@
                                 </PhTable>
                             </Body>
                             <Footer>
-                                <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                             </Footer>
                         </PhModal>
                      </Body>
                     <Footer>
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
             </div>

@@ -23,7 +23,7 @@
     </div>
     <br />
     <div class="input-group" style="width: 45%;">
-        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
     </div>
     <br />
     <PhTable @ref="_table" TPost="PreguntasDTO" isRefresh="true" TReturn="PreguntasDTO" Body="@pregunta" EndPoint="@EndPointPregunta"
@@ -54,7 +54,7 @@
             }
         </PhTableColumnValues>
         <PhTableActions>
-            <PhButton Type="ButtonType.Primary" OnClick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
         </PhTableActions>
     </PhTable>
     <PhNotification @ref="@modalNotification">
@@ -112,8 +112,8 @@
             </EditForm>
         </Body>
         <Footer>
-            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
-            <PhButton Type="ButtonType.Danger" @onclick="() => modalPregunta.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalPregunta.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
         </Footer>
 
     </PhModal>

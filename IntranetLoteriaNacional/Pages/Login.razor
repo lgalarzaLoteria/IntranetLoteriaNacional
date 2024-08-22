@@ -5,6 +5,7 @@
 
 
 @using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Data
 @using IntranetLoteriaNacional.Shared.ComponentModels
 @using IntranetLoteriaNacional.Shared.Constants 
 @using LoteriaNacionalDominio
@@ -16,7 +17,8 @@
 @using Newtonsoft.Json.Linq
 @using System.Globalization
 @using static LoteriaNacionalDominio.StoreCheckDTO
-
+@using BrowserInterop.Extensions
+@using BrowserInterop.Geolocation
 
 @inject NavigationManager _navigation
 @inject ILocalStorageService _session
@@ -24,11 +26,15 @@
 @inject SweetAlertService Swal
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
+@inject StoreCheckService StoreService
+@* @implements IAsyncDisposable *@
+
 
 <style>
     #div__container {
         width: 100%;
         height: 100%;
+        /* text-align:center; */
         background-position: 0% 0% !important;
         background-size: 100% 100% !important;
         background-repeat: no-repeat !important;
@@ -36,29 +42,32 @@
     }
 
     #div__login-container {
-        right: 64vh; 
+        right: 0px;
+        left:0px;
+        top: 8em;
         bottom: 20vh;
         width: 60vh;
         padding: 13vh;
-        position: fixed;
-        text-align: center;
+        position: absolute;
+        margin:auto;
+        /* text-align: center; */
         border-radius: 12px;
         background-color: white;
         /* box-shadow: 4px 7px 31px -9px black;  */
     }
 </style>
 
-<div id="div__container" style="text-align:center">
+<div id="div__container" >
     <div id="div__login-container">
         <div style="padding: 20px; background-color: white;">
-            <img style="width: 200px" src="./images/loterialogo.png" />
+            <img alt="Lotería Nacional" style="width: 200px" src="./images/loterialogo.png" />
         </div>
         <span style="color: var(--ph-skyblue);font-size: 25px;">Iniciar sesión</span>
         <input type="text" @bind-value="@Username" @onkeyup="@Enter" class="mt-4 form-control mb-2" placeholder="Usuario" aria-label="Username" aria-describedby="basic-addon1">
         <input type="password" @onkeyup="@Enter" class="form-control mb-4" @bind-value="@Password" placeholder="Contrasena" aria-label="Username" onke aria-describedby="basic-addon1">
         <button @onclick="TryLogin" style="background-color: var(--ph-skyblue)" class="btn btn-primary mb-1">Ingresar</button>
         <br />
-        <a style="font-size: 10px !important;" href="#" class="link-secondary">Learn more</a>
+ @*        <a style="font-size: 10px !important;" href="#" class="link-secondary">Learn more</a> *@
     </div>
 </div>
 
@@ -76,6 +85,14 @@
     string longitud = string.Empty;
     string direccion = string.Empty;
 
+    private WindowNavigatorGeolocation geolocalizacion;
+    private GeolocationPosition posicionActual;
+
+    protected override async void OnInitialized()
+    {
+
+
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -87,30 +104,6 @@
                 _navigation.NavigateTo("~/Home/Home");
             }
             await loader.Close();
-            var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
-            longitud = result[0].ToString().Replace('.', ',');
-            latitud = result[1].ToString().Replace('.', ',');
-
-            bool latitudContieneComa = latitud.Contains(",");
-            if (latitudContieneComa)
-                latitud = latitud.Replace(',', '.');
-
-            bool longitudContieneComa = longitud.Contains(",");
-            if (longitudContieneComa)
-                longitud = longitud.Replace(',', '.');
-
-
-            // await Swal.FireAsync(new SweetAlertOptions
-            //     {
-            //         ConfirmButtonColor = "var(--ph-skyblue)",
-            //         Title = "Intranet Lotería Nacional",
-            //         Text = string.Concat(latitudStr, "/", longitudStr),
-            //         Icon = "info"
-            //     });
-
-            
-            await EncontrarDireccionMaps(latitud, longitud);
-
         }
     }
 
@@ -153,6 +146,85 @@
                 return;
             }
 
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());// objeto para guardar la ip
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily.ToString() == "InterNetwork")
+                {
+                    localIP = ip.ToString();// esta es nuestra ip
+                }
+            }
+
+            await _session.SetItemAsync("equipoTransaccion", localIP);
+
+            #region Geolocalizacion
+            var window = await JSRuntime.Window();
+            var navigator = await window.Navigator();
+            geolocalizacion = navigator.Geolocation;
+            posicionActual = (await geolocalizacion.GetCurrentPosition()).Location;
+
+            if (posicionActual == null)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+                        Icon = "error"
+                    });
+                return;
+            }
+            else
+            {
+                longitud = posicionActual.Coords.Longitude.ToString().Replace('.', ',');
+                latitud = posicionActual.Coords.Latitude.ToString().Replace('.', ',');
+
+                bool latitudContieneComa = latitud.Contains(",");
+                if (latitudContieneComa)
+                    latitud = latitud.Replace(',', '.');
+
+                bool longitudContieneComa = longitud.Contains(",");
+                if (longitudContieneComa)
+                    longitud = longitud.Replace(',', '.');
+
+                await EncontrarDireccionMaps(latitud, longitud);
+            }
+
+            #region Geolocalización con JavaScript
+            // var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
+
+            // if (result==null)
+            // {
+            //     await loader.Close();
+            //     await Swal.FireAsync(new SweetAlertOptions
+            //             {
+            //                 ConfirmButtonColor = "var(--ph-skyblue)",
+            //                 Title = "Intranet Lotería Nacional",
+            //                 Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+            //                 Icon = "error"
+            //             });
+            //     return;
+            // }
+
+            // longitud = result[0].ToString().Replace('.', ',');
+            // latitud = result[1].ToString().Replace('.', ',');
+
+            // bool latitudContieneComa = latitud.Contains(",");
+            // if (latitudContieneComa)
+            //     latitud = latitud.Replace(',', '.');
+
+            // bool longitudContieneComa = longitud.Contains(",");
+            // if (longitudContieneComa)
+            //     longitud = longitud.Replace(',', '.');
+
+            // await EncontrarDireccionMaps(latitud, longitud);
+
+            #endregion
+
+
+            #endregion
+
             var existeUsuario = await _httpClient.PostAsJsonAsync<LoginRespuestaDTO>(EndPoints.validarUsuario,login);
 
             if(existeUsuario!=null)
@@ -161,8 +233,10 @@
                 string nombreUsuario = dominioUsuarioLogueado.Substring(0, dominioUsuarioLogueado.LastIndexOf("-"));
                 string nombreDominioUsuario = dominioUsuarioLogueado.Substring((dominioUsuarioLogueado.LastIndexOf("-") + 1), (dominioUsuarioLogueado.Length - (dominioUsuarioLogueado.LastIndexOf("-") + 1)));
 
-
                 string PDSUsuario = string.Empty;
+                LoginDTO login1 = new LoginDTO();
+                login1.UserName = "comisionista";
+                //string codigoUsuario = string.Empty;
                 MenuDTO[] respuestaRolUsuario = new MenuDTO[1];
                 if (nombreDominioUsuario == "PDS")
                 {
@@ -173,17 +247,34 @@
                     geolocalizacionPDS.longitudPDS = longitud;
                     geolocalizacionPDS.direccionPDS = direccion;
                     geolocalizacionPDS.usuarioTransaccion = login.UserName;
-                    geolocalizacionPDS.equipoTransaccion = "Sistemas";
+                    geolocalizacionPDS.equipoTransaccion = localIP;
 
-                    LoginDTO login1 = new LoginDTO();
-                    login1.UserName = "comisionista";
-                    login.UserName = "lzambrano";
+
+                    //codigoUsuario = login1.UserName;
+                    //Para pruebas
+                    // LoginDTO login2 = new LoginDTO();
+                    // login2.UserName = "lzambrano";
+
                     var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<RespuestaPDSDTO>(EndPoints.obtienePDSUsuario, login);
+                    if (respuestaPDSUsuario == null)
+                    {
+                        Message = "Usuario no tiene asignado ningún PDS, por favor comuníquese con el administrador";
+                        await loader.Close();
+                        _isInvalid = true;
+                        await Swal.FireAsync(new SweetAlertOptions
+                            {
+                                ConfirmButtonColor = "var(--ph-skyblue)",
+                                Title = "Intranet Lotería Nacional",
+                                Text = Message,
+                                Icon = "error"
+                            });
+                        return;
+                    }
+
                     PDSUsuario = respuestaPDSUsuario[0].nombrePDS;
                     geolocalizacionPDS.codigoPDS = respuestaPDSUsuario[0].codigoPDS;
 
                     respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login1);
-                    
 
                     var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.mantenimientoGrabarUbicacionPDS)
                         {
@@ -195,11 +286,11 @@
                 else
                 {
                     respuestaRolUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneRolUsuario, login);
+                    //codigoUsuario = login.UserName;
                 }
 
-                string rolUsuario = respuestaRolUsuario[0].nombreRol;
-                
-                if(respuestaRolUsuario == null)
+                string rolUsuario = string.Empty;
+                if (respuestaRolUsuario == null)
                 {
                     Message = "Usuario no tiene rol de acceso en el sistema, por favor comuníquese con el administrador";
                     await loader.Close();
@@ -211,26 +302,35 @@
                             Text = Message,
                             Icon = "error"
                         });
-                        return;
+                    return;
+                }
+                else
+                {
+                    rolUsuario = respuestaRolUsuario[0].nombreRol;
                 }
 
-                  
+                //Se equipara el codigo de usuario comisionista y/o cualquiera
+                //login.UserName = codigoUsuario;
 
                 await _session.SetItemAsync("nombreUsuario", nombreUsuario);
                 await _session.SetItemAsync("codigoUsuario", login.UserName);
                 await _session.SetItemAsync("PDSUsuario", PDSUsuario);
                 await _session.SetItemAsync("RolUsuario", rolUsuario);
 
-                IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());// objeto para guardar la ip
-                foreach (IPAddress ip in host.AddressList)
+                StoreService.codigoUsuario = login.UserName;
+
+                MenuDTO[] menuUsuario = null;
+
+                if (nombreDominioUsuario == "PDS")
                 {
-                    if (ip.AddressFamily.ToString() == "InterNetwork")
-                    {
-                        localIP = ip.ToString();// esta es nuestra ip
-                    }
+                    menuUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneMenuUsuario, login1);
                 }
-                await _session.SetItemAsync("equipoTransaccion", localIP);
-                var menuUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneMenuUsuario, login);
+                else
+                {
+                    menuUsuario = await _httpClient.PostAsJsonAsync<MenuDTO>(EndPoints.obtieneMenuUsuario, login);
+                }
+
+                
                 if (menuUsuario==null)
                 {
                     Message = "Usuario no tiene permisos para acceder al sistema, por favor comuníquese con el administrador";
@@ -242,7 +342,8 @@
                         Title = "Intranet Lotería Nacional",
                         Text = Message,
                         Icon = "error"
-                    });          
+                    });
+                    return;
                 }
                 else
                 {
@@ -261,6 +362,9 @@
                             break;
                         case "Gerencia":
                             _navigation.NavigateTo("./StoreCheck/RankingPDS");
+                            break;
+                        case "Configuracion Store Check":
+                            _navigation.NavigateTo("./Reports/ReporteSeguimientoRevision");
                             break;
                         default:
                             _navigation.NavigateTo("./Home/Home");
@@ -281,13 +385,21 @@
                         Text = Message,
                         Icon = "error"
                     });
+                    return;
             }
         }
         catch (Exception ex)
         {
             _isInvalid = true;
-            Message = ex.Message;
+            // Message = ex.Message;
             await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = ex.Message.ToString(),
+                    Icon = "error"
+                });
             StateHasChanged();
         }
     }
@@ -298,7 +410,6 @@
             await TryLogin();
         }
     }
-    
     private async Task EncontrarDireccionMaps(string latitud, string longitud)
     {
         string MyMapsApiKey = Configuration.GetValue<string>("KeyGoogleMaps");

@@ -115,7 +115,7 @@
     
 </style>
 <div class="modal fade @modalClass" tabindex="-1" role="dialog" style="display:@modalDisplay;z-index: @index;">
-    <div class="modal-dialog modal-lg modal-dialog-phar" style="max-width: @maxwidth;" role="document">
+    <div class="modal-dialog modal-lg modal-dialog-phar" style="max-width: @maxwidth;max-height: @maxheight" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background-color:var(--ph-skyblue)">
                 @if (isDivTitle == null)
@@ -160,6 +160,9 @@
 
     [Parameter]
     public string? maxwidth { get; set; } = "60%";
+
+    [Parameter]
+    public string? maxheight { get; set; } = "100%";
 
     [Parameter]
     public bool? isDivTitle { get; set; }

@@ -1,0 +1,118 @@
+﻿@page "/Reports/ReporteElementosTI"
+
+@using Blazored.LocalStorage
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@* @using static LoteriaNacionalDominio.MantenimientoDTO *@
+@using static LoteriaNacionalDominio.SeguridadDTO
+@using C1.Blazor.DateTimeEditors
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+
+<article class="art">
+    <div class="form-group row">
+        <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
+        <div class="col-sm-2">
+            <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
+        </div>
+        <label for="det" class="col-sm-2 col-form-label">Fecha hasta</label>
+        <div class="col-sm-2">
+            <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
+        </div>
+        <div class="col-sm-2">
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="ConsultarElementosITxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="Cancelar" Size="ButtonSize.Medium" Text="Cancelar" />
+        </div>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+@code {
+    Loading loader { get; set; } = new();
+
+    DateTime fechaDesde;
+    C1DatePicker _c1DatePickerDesde;
+    DateTime fechaHasta;
+    C1DatePicker _c1DatePickerHasta;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Reports/ReporteElementosTI", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+
+
+        }
+
+
+    }
+
+    protected override async void OnInitialized()
+    {
+        fechaDesde = DateTime.Today.AddDays(-30);
+        fechaHasta = DateTime.Today;
+    }
+
+    private async Task ConsultarElementosITxFecha()
+    {
+        try
+        {
+            // RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            // datoEnviar.codigoSupervisor = strSupervisor;
+            // datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
+            // datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
+
+            // EndPointObtieneRevisadosPorSupervisor = EndPoints.obtieneRevisadosPorSupervisor;
+
+            // var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+            //    (EndPointObtieneRevisadosPorSupervisor, datoEnviar);
+
+            // await loader.Show();
+            // _tableRevisadosSupervisor.Data = result;
+
+            // checkItemAll = false;
+            // await JSRuntime.InvokeVoidAsync("observeTableChanges", "revisadosxFecha");
+
+            if (loader.isShow())
+            {
+                await loader.Close();
+            }
+            StateHasChanged();
+
+        }
+        catch (Exception ex)
+        {
+            //Data = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Cancelar()
+    {
+        try
+        {
+            OnInitialized();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            //Data = null;
+            StateHasChanged();
+        }
+    }
+
+}

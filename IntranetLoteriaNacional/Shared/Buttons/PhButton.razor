@@ -142,7 +142,7 @@ else
     [Parameter]
     public ButtonSize Size { get; set; } = ButtonSize.Medium;
     [Parameter]
-    public ButtonType Type { get; set; } = ButtonType.Primary;
+    public IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType Type { get; set; } = IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary;
     [Parameter]
     public string Text { get; set; } = null!;
     [Parameter]
@@ -176,16 +176,16 @@ else
     {
         switch (Type)
         {
-            case ButtonType.Primary:
+            case IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary:
                 _class += "btn btn-primary ";
                 break;
-            case ButtonType.Success:
+            case IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success:
                 _class += "btn btn-success ";
                 break;
-            case ButtonType.Danger:
+            case IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger:
                 _class += "btn btn-danger ";
                 break;
-            case ButtonType.Secondary:
+            case IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Secondary:
                 _class += "btn btn-secondary ";
                 break;
         }

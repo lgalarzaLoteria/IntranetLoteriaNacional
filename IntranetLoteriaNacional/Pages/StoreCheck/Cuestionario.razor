@@ -22,7 +22,7 @@
         <label for="det" class="col-sm-2 col-form-label">@usuario</label>
     </div> *@
     <div class="input-group" style="width: 45%;">
-        <PhButton Type="ButtonType.Primary" @onclick="()=>modalConfirmacion.showModalConfirm()" Size="ButtonSize.Medium" Text="Guardar" />
+        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="()=>modalConfirmacion.showModalConfirm()" Size="ButtonSize.Medium" Text="Guardar" />
     </div>
     <br />
     <div class="row">
@@ -53,20 +53,40 @@
                                 <tbody>
                                     @if (preguntasList != null)
                                     {
-                                        foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
-                                        {
-                                            string nombreRadioButton = "radio" + count.ToString();
-                                            <tr>
-                                                <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
-                                                <td width="4%">
-                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = true)" />
-                                                </td>
-                                                <td width="6%">
-                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
-                                                </td>
-                                            </tr>
-                                            count++;
-                                        }
+                                        @if (debeLimpiar == true)
+                                            {
+                                                foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                {
+                                                    string nombreRadioButton = "radio" + count.ToString();
+                                                    <tr>
+                                                        <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                        <td width="4%">
+                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
+                                                        </td>
+                                                        <td width="6%">
+                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
+                                                        </td>
+                                                    </tr>
+                                                    count++;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                {
+                                                    string nombreRadioButton = "radio" + count.ToString();
+                                                    <tr>
+                                                        <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                        <td width="4%">
+                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = true)" />
+                                                        </td>
+                                                        <td width="6%">
+                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.repuestaPregunta = false)" />
+                                                        </td>
+                                                    </tr>
+                                                    count++;
+                                                }
+                                            }
                                     }
                                 </tbody>
                             </table>
@@ -96,10 +116,8 @@
     public IEnumerable<PreguntasDTO> preguntasList;
     PreguntasDTO preguntasDTOForm = new PreguntasDTO();
     PreguntasDTO SaveValue = new PreguntasDTO();
-    IEnumerable<string> opcionesRespuesta = new[] {
-        "Si"
-    };
     string respuesta { get; set; } = string.Empty;
+    bool debeLimpiar = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -164,7 +182,7 @@
         if(item!=null)
         {
             dtSelectseccion = item;
-            dtSelectseccion.equipoTransaccion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+            dtSelectseccion.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
             dtSelectseccion.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
             //CargarPreguntas(item);
         }
@@ -207,6 +225,7 @@
                         Text = "Todas las preguntas deben tener respuesta, por favor revise",
                         Icon = "error"
                     });
+                debeLimpiar = false;
                 return;
             }
 
@@ -222,18 +241,25 @@
                 datoEnviar.codigoRegistro = 0;
                 datoEnviar.codigoFormulario = 0;
                 datoEnviar.codigoPDS = 0;
-                datoEnviar.codigoComisionista = "lzambrano";//await _session.GetItemAsync<string>("codigoUsuario");
-                //datoEnviar.codigoComisionista = await _session.GetItemAsync<string>("codigoUsuario");
+
+                datoEnviar.codigoComisionista = await _session.GetItemAsync<string>("codigoUsuario");
+                
                 datoEnviar.codigoSeccion = item.codigoSeccion;
                 datoEnviar.codigoPregunta = item.codigoPregunta;
                 datoEnviar.respuesta = item.repuestaPregunta;
-                datoEnviar.fechaRegistro = DateTime.Now.ToString("yyyy-MM-dd"); 
-                datoEnviar.equipoCreacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
+                datoEnviar.fechaRegistro = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                datoEnviar.equipoCreacion = await _session.GetItemAsync<string>("equipoTransaccion");
                 datoEnviar.usuarioCreacion = await _session.GetItemAsync<string>("codigoUsuario");
-                datoEnviar.fechaCreacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt")); 
+                datoEnviar.fechaCreacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 registro.Add(datoEnviar);
             }
+
+            listaEnviar.evidenciaRevision = string.Empty;
+            listaEnviar.latitudEvidencia = string.Empty;
+            listaEnviar.longitudEvidencia = string.Empty;
+            listaEnviar.direccionEvidencia = string.Empty;
+
 
             listaEnviar.registro = registro;
 
@@ -248,6 +274,7 @@
                 var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
                 if (returnType.CodigoError == 0)
                 {
+                    debeLimpiar = true;
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "success";
                 }
@@ -295,8 +322,8 @@
     private async Task CancelConfirm()
     {
         //this.OnInitialized();
+        debeLimpiar = true;
         StateHasChanged();
     }
-    
-
+   
 }

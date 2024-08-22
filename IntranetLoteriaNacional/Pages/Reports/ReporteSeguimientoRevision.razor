@@ -1,0 +1,114 @@
+﻿@page "/Reports/ReporteSeguimientoRevision"
+
+@using Blazored.LocalStorage
+@using C1.Chart
+@using C1.Blazor.Chart
+@using IntranetLoteriaNacional.Data
+@using IntranetLoteriaNacional.Shared.ComponentModels
+@using IntranetLoteriaNacional.Shared.Modals
+@using IntranetLoteriaNacional.Shared.Constants
+@using IntranetLoteriaNacional.Validate
+@using LoteriaNacionalDominio
+@using static LoteriaNacionalDominio.StoreCheckDTO
+@* @using static LoteriaNacionalDominio.MantenimientoDTO *@
+@using static LoteriaNacionalDominio.SeguridadDTO
+@using C1.Blazor.DateTimeEditors
+
+@inject ProjectHttpClient _httpClient
+@inject ILocalStorageService _session
+@inject NavigationManager _navigation
+@inject SweetAlertService Swal
+@inject StoreCheckService StoreService
+
+<article class="art">
+    <div class="row">
+        <div class="col-md-6 col-sm-12">
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Bar" Stacking="Stacking.None" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                           HeaderContent="Cuestionarios Pendientes Revisión (últimos 30 días) Supervisor" HeaderStyle="font-size:15px"
+                       LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px" SelectionStyle="ChartSelectionMode.Point"
+                       BindingX="nombreZona" ItemsSource="@cuestionariosPendientesSupervisorRevision">
+                    <SeriesCollection>
+                        <Series Name="Cuestionarios Pendientes" Binding="CuestionariosPendientes" />
+                    </SeriesCollection>
+                </FlexChart>
+        </div>
+        <div class="col-md-6 col-sm-12">
+            <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Bar" Stacking="Stacking.None" SelectionMode="C1.Chart.ChartSelectionMode.Point"
+                       HeaderContent="Cuestionarios Pendientes Revisión (últimos 30 días) Jefe Zonal" HeaderStyle="font-size:15px"
+                       LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px" SelectionStyle="ChartSelectionMode.Point"
+                       BindingX="nombreZona" ItemsSource="@cuestionariosPendientesJefeComercialRevision">
+                <SeriesCollection>
+                    <Series Name="Cuestionarios Pendientes" Binding="CuestionariosPendientes" />
+                </SeriesCollection>
+            </FlexChart>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-sm-12" style="text-align: center">
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerDetalle" Size="ButtonSize.Medium" Text="Ver Pendientes" />
+        </div>
+    </div>
+    <Loading @ref="loader"></Loading>
+</article>
+
+@code {
+    Loading loader { get; set; } = new();
+    List<ZonasPorSupervisorDTO>? cuestionariosPendientesSupervisorRevision;
+    List<ZonasPorSupervisorDTO>? cuestionariosPendientesJefeComercialRevision;
+
+    protected override async void OnInitialized()
+    {
+        try
+        {
+            cuestionariosPendientesSupervisorRevision = StoreService.ObtienePendientesSupervisorPorZona();
+            cuestionariosPendientesJefeComercialRevision = StoreService.ObtienePendientesJefeComercialPorZona();
+        }
+        catch (Exception ex)
+        {
+            
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
+            Validate validate = new Validate();
+            if (!validate.isValid("./Reports/ReporteSeguimientoRevision", item))
+            {
+                _navigation.NavigateTo("./Home/Error");
+            }
+
+            await loader.Close();
+
+
+        }
+
+
+    }
+
+    private async Task VerDetalle()
+    {
+        try
+        {
+            // RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+            // datoEnviar.codigoSupervisor = strSupervisor;
+
+            // EndPointObtieneRevisadosPorSupervisor = EndPoints.obtieneRevisadosPorSupervisor;
+
+            // var result = await _httpClient.PostAsJsonAsync<ResumenGerencialZonasDTO>
+            //    (EndPointObtieneRevisadosPorSupervisor, datoEnviar);
+
+            // _tableRevisadosSupervisor.Data = result;
+
+            // await modalCuestionariosRevisados.NewModal();
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message.ToString());
+        }
+    }
+
+}

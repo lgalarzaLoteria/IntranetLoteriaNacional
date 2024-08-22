@@ -35,7 +35,9 @@
         public static string obtieneRevisadosPorSupervisor = "StoreCheck/ObtieneRevisadosPorSupervisor";
         public static string obtenerPDSPorRangoCumplimiento = "StoreCheck/ObtienePDSPorRangoCumplimiento";
         public static string obtenerCalificacioCustionariosporPDS = "StoreCheck/ObtieneCalificacioCustionariosporPDS";
-        
+
+        public static string grabarEvidenciaTI = "StoreCheck/GrabarEvidenciaTI";
+
         public static string obtenerZonasPorJefeComercial = "StoreCheck/ObtieneZonasPorJefeComercial";
         public static string obtieneRevisadosPorJefeComercial = "StoreCheck/ObtieneRevisadosPorJefeComercial";
         public static string obtenerRankingPDSPorJefeComercial = "StoreCheck/ObtieneRankingPDSPorJefeComercial";
@@ -47,8 +49,16 @@
         public static string obtenerInformeSupervisor = "StoreCheck/ObtieneInformeSupervisor";
         public static string obtenerInformeJefeVentas = "StoreCheck/ObtieneInformeJefeVentas";
 
+        public static string obtenerPendientesSupervisor = "StoreCheck/ObtienePendientesSupervisorPorPDSZona";
+        public static string obtenerPendientesJefeVentas = "StoreCheck/ObtienePendientesJefeComercialPorPDSZona";
+
         public static string mantenimientoObtieneUbicacionPDS = "StoreCheck/MantenimientoObtieneUbicacionPDS";
         public static string mantenimientoGrabarUbicacionPDS = "StoreCheck/MantenimientoGrabarUbicacionPDS";
+        public static string mantenimientoActualizarUbicacionPDS = "StoreCheck/MantenimientoActualizarUbicacionPDS";
+
+        public static string obtenerElementosTI = "Mantenimiento/MantenimientoObtenerElementosTI";
+        public static string grabarElementosTI = "Mantenimiento/MantenimientoGrabarElementosTI";
+        public static string listarElementosTI = "Mantenimiento/ObtenerElementosTI";
 
 
         #endregion

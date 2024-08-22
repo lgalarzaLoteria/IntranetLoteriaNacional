@@ -31,7 +31,7 @@
 <article class="art">
     <h1 class="tituloPagina">Secciones</h1>
     <div class="input-group" style="width: 45%;">
-        <PhButton Type="ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
+        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
     </div>
     <PhModal @ref="modalSeccion">
         <Title>Sección</Title>
@@ -70,8 +70,8 @@
             </EditForm>
         </Body>
         <Footer>
-            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
-            <PhButton Type="ButtonType.Danger" @onclick="() => modalSeccion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalSeccion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
         </Footer>
     </PhModal>
     <div>
@@ -100,7 +100,7 @@
                 }
             </PhTableColumnValues>
             <PhTableActions>
-                <PhButton Type="ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
 
             </PhTableActions>
 

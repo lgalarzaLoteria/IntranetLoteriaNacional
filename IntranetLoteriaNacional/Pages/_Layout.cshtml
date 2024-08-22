@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="~/_content/C1.Blazor.Calendar/styles.css" />
     <link rel="stylesheet" href="~/_content/C1.Blazor.DateTimeEditors/styles.css" />
     <link rel="stylesheet" href="~/_content/C1.Blazor.Input/styles.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <component type="typeof(HeadOutlet)" render-mode="Server" />
     
 </head>
@@ -45,6 +47,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     <script src="_framework/blazor.server.js" autostart="false"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_content/BrowserInterop/scripts.js"></script> 
     <script>
         Blazor.start({
             reconnectionHandler: {
@@ -69,7 +73,7 @@
             const pos = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject);
             });
-            return [pos.coords.longitude, pos.coords.latitude];
+            return [pos.coords.longitude, pos.coords.latitude]
         };
     </script>
     <script src="_content/CurrieTechnologies.Razor.SweetAlert2/sweetAlert2.min.js"></script>

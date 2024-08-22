@@ -1,4 +1,4 @@
-﻿@page "/Maintenance/Aplicaciones"
+﻿@page "/Maintenance/UbicacionPDS"
 
 @using Blazored.LocalStorage
 @using IntranetLoteriaNacional.Shared.ComponentModels
@@ -6,9 +6,8 @@
 @using IntranetLoteriaNacional.Shared.Constants
 @using IntranetLoteriaNacional.Validate
 @using LoteriaNacionalDominio
-@using static LoteriaNacionalDominio.MantenimientoDTO
+@using static LoteriaNacionalDominio.StoreCheckDTO
 @using static LoteriaNacionalDominio.SeguridadDTO
-
 
 @inject ILocalStorageService _session
 @inject NavigationManager _navigation
@@ -29,73 +28,64 @@
 </style>
 
 <article class="art">
-    <h1 class="tituloPagina">Aplicaciones</h1>
-    <div class="input-group" style="width: 45%;">
-        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="New" Size="ButtonSize.Medium" Text="Agregar" />
-    </div>
-    <PhModal @ref="modalAplicacion">
-        <Title>Aplicación</Title>
+    <h1 class="tituloPagina">Ubicación de PDS</h1>
+    <PhModal @ref="modalUbicacionPDS">
+        <Title>Ubicación PDS</Title>
         <Body>
-            <EditForm Model="aplicacionDTOForm">
+            <EditForm Model="ubicacionPDSDTOForm">
                 <div class="form-group row" style="margin-bottom:2%;">
-                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Aplicación</label>
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Nombre PDS</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="aplicacionDTOForm.nombreAplicacion" placeholder="Ingrese el nombre de la aplicación">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="ubicacionPDSDTOForm.nombrePDS" readonly="readonly">
                     </div>
                 </div>
                 <div class="form-group row" style="margin-bottom:2%;">
-                    <div class="col-sm-2">
-                        <label for="chek" class="col-sm-2 col-form-label col-form-label-lg">Estado</label>
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Latitud</label>
+                    <div class="col-sm-10">
+                        <input type="number" min="0" max="100" id="det" @bind-value="ubicacionPDSDTOForm.latitudPDS" readonly="readonly" style="width:130px;">
                     </div>
-                    <div class="col-sm-2">
-                        <div class="form-check form-switch col-sm-2 col-form-label col-form-label-lg">
-                            <input class="form-check-input" @bind-value="@aplicacionDTOForm.estadoAplicacion" checked="@aplicacionDTOForm.estadoAplicacion" type="checkbox" id="flexSwitchCheckChecked">
-                            @if (@aplicacionDTOForm.estadoAplicacion == true)
-                            {
-                                <label class="form-check-label" for="flexSwitchCheckChecked">Activo</label>
-                            }
-                            else
-                            {
-                                <label class="form-check-label" for="flexSwitchCheckChecked">Inactivo</label>
-                            }
-                        </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Longitud</label>
+                    <div class="col-sm-10">
+                        <input type="number" min="0" max="100" id="det" @bind-value="ubicacionPDSDTOForm.longitudPDS" readonly="readonly" style="width:130px;">
+                    </div>
+                </div>
+                <div class="form-group row" style="margin-bottom:2%;">
+                    <label for="det" class="col-sm-2 col-form-label col-form-label-lg">Dirección PDS</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control form-control-lg" id="det" @bind-value="ubicacionPDSDTOForm.direccionPDS">
                     </div>
                 </div>
             </EditForm>
         </Body>
         <Footer>
             <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Medium" Text="Guardar" isConfirmation="true" />
-            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalAplicacion.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
+            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalUbicacionPDS.CloseModal()" Size="ButtonSize.Medium" Text="Cerrar" />
         </Footer>
     </PhModal>
     <div>
         <br />
-        <PhTable @ref="_table" TPost="AplicacionDTO" isRefresh="true" TReturn="AplicacionDTO" Body="new AplicacionDTO()" EndPoint="@EndPointStr"
+        <PhTable @ref="_table" TPost="GeolocalizacionDTO" isRefresh="true" TReturn="GeolocalizacionDTO" Body="new GeolocalizacionDTO()" EndPoint="@EndPointStr"
                  SearchDefinition="@(new[]
                  {
-                    "nombreAplicacion",
-                    "descripcionEstadoAplicacion"
+                    "nombrePDS"
                  })">
             <PhTableColumnHeaders>
-                <PhTableColumn Style="width:40%;" Value="Nombre Aplicación" IsHeader="true" />
-                <PhTableColumn Style="width:20%;" Value="Estado de la Aplicación" IsHeader="true" />
+                <PhTableColumn Style="width:30%;" Value="Nombre PDS" IsHeader="true" />
+                <PhTableColumn Style="width:15%;" Value="Latitud" IsHeader="true" />
+                <PhTableColumn Style="width:15%;" Value="Longitud" IsHeader="true" />
+                <PhTableColumn Style="width:40%;" Value="Dirección PDS" IsHeader="true" />
             </PhTableColumnHeaders>
             <PhTableColumnValues>
-                <PhTableColumn Value="@context.nombreAplicacion" Style="width:40%;" />
-                @if (context.estadoAplicacion == true)
-                {
-                    <PhTableColumn StatusColor="var(--ph-green)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
-                }
-                else
-                {
-                    <PhTableColumn StatusColor="var(--ph-red)" Style="width:20%;" Value="@context.descripcionEstadoAplicacion" />
-                }
+                <PhTableColumn Value="@context.nombrePDS" Style="width:30%;" />
+                <PhTableColumn Value="@context.latitudPDS" Style="width:15%;" />
+                <PhTableColumn Value="@context.longitudPDS" Style="width:15%;" />
+                <PhTableColumn Value="@context.direccionPDS" Style="width:40%;" />
             </PhTableColumnValues>
             <PhTableActions>
                 <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => Update(context))" Size="ButtonSize.Small" Text="Editar" />
-
             </PhTableActions>
-
         </PhTable>
         <PhNotification @ref="@modalNotification">
         </PhNotification>
@@ -108,16 +98,19 @@
 @code {
     Loading loader { get; set; } = new();
 
-    private PhTable<AplicacionDTO, AplicacionDTO>? _table = new();
-    private PhModal? modalAplicacion { get; set; } = new();
+    private PhTable<GeolocalizacionDTO, GeolocalizacionDTO>? _table = new();
+    private PhModal? modalUbicacionPDS { get; set; } = new();
     private PhNotification modalNotification { get; set; } = new();
-    AplicacionDTO aplicacionDTOForm = new AplicacionDTO();
-    AplicacionDTO AplicacionDTO { get; set; } = null!;
+    GeolocalizacionDTO ubicacionPDSDTOForm = new GeolocalizacionDTO();
+    GeolocalizacionDTO ubicacionPDSDTO { get; set; } = null!;
     private string EndPointStr { get; set; } = null!;
 
     protected override async void OnInitialized()
     {
-        EndPointStr = EndPoints.obtenerAplicaciones;
+        EndPointStr = EndPoints.mantenimientoObtieneUbicacionPDS;
+
+        // GeolocalizacionDTO pruebaDTO = new GeolocalizacionDTO();                
+        // var respuestaPDSUsuario = await _httpClient.PostAsJsonAsync<RespuestaPDSDTO>(EndPoints.mantenimientoObtieneUbicacionPDS, pruebaDTO);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -126,7 +119,7 @@
         {
             var item = await _session.GetItemAsync<MenuDTO[]>("_userMenu");
             Validate validate = new Validate();
-            if (!validate.isValid("./Maintenance/Aplicaciones", item))
+            if (!validate.isValid("./Maintenance/UbicacionPDS", item))
             {
                 _navigation.NavigateTo("./Home/Error");
             }
@@ -134,13 +127,13 @@
         }
     }
 
-    private async Task New()
-    {
-        aplicacionDTOForm = new AplicacionDTO();
-        aplicacionDTOForm.estadoAplicacion = true;
-        aplicacionDTOForm.codigoAplicacion = 0;
-        await modalAplicacion.NewModal();
-    }
+    // private async Task New()
+    // {
+    //     ubicacionPDSDTOForm = new GeolocalizacionDTO();
+    //     ubicacionPDSDTOForm.secuencial = 0;
+    //     await modalSeccion.NewModal();
+    // }
+
 
     private async Task sendData()
     {
@@ -150,10 +143,10 @@
 
         try
         {
-            if (aplicacionDTOForm.nombreAplicacion == null || aplicacionDTOForm.nombreAplicacion == string.Empty)
+            if (ubicacionPDSDTOForm.direccionPDS == null || ubicacionPDSDTOForm.direccionPDS == string.Empty)
             {
                 await loader.Close();
-                mensajeTransaccion = "El nombre de la aplicación debe ser ingresado";
+                mensajeTransaccion = "La dirección del PDS debe ser ingresada";
                 iconoMostrar = "error";
                 await Swal.FireAsync(new SweetAlertOptions
                     {
@@ -165,12 +158,12 @@
                 return;
             }
 
-            aplicacionDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
-            aplicacionDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+            ubicacionPDSDTOForm.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            ubicacionPDSDTOForm.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
 
-            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarAplicaciones)
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.mantenimientoActualizarUbicacionPDS)
                 {
-                    Content = JsonContent.Create(aplicacionDTOForm)
+                    Content = JsonContent.Create(ubicacionPDSDTOForm)
                 };
             var postResponse = await _httpClient.SendAsync(postRequest);
             if (postResponse.IsSuccessStatusCode)
@@ -187,7 +180,7 @@
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "error";
                 }
-                await modalAplicacion.CloseModal();
+                await modalUbicacionPDS.CloseModal();
                 await loader.Close();
             }
             else
@@ -195,7 +188,7 @@
                 //await modalNotification.ErrorModal("Error de servicio");
                 mensajeTransaccion = "Error de servicio";
                 iconoMostrar = "error";
-                await modalAplicacion.CloseModal();
+                await modalUbicacionPDS.CloseModal();
                 await loader.Close();
             }
 
@@ -211,16 +204,17 @@
         catch (HttpRequestException e)
         {
             await modalNotification.ErrorModal(e.Message.ToString());
-            await modalAplicacion.CloseModal();
+            await modalUbicacionPDS.CloseModal();
             await loader.Close();
         }
     }
 
-    private async Task Update(AplicacionDTO aplicacionDTO)
+    private async Task Update(GeolocalizacionDTO ubicacionPDSDTO)
     {
-        aplicacionDTOForm = aplicacionDTO;
-        await modalAplicacion.UpdateModal();
+        ubicacionPDSDTOForm = ubicacionPDSDTO;
+        await modalUbicacionPDS.UpdateModal();
         StateHasChanged();
     }
+
 
 }

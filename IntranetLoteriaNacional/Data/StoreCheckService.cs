@@ -26,14 +26,16 @@ namespace IntranetLoteriaNacional.Data
         ZonasPorSupervisorDTO[] dataCuentionariosPendientesZona;
         TiempoRevisionDTO[] tiempoRevisionJefeComercial;
 
-        public List<ZonasInfo> Zonas;
-        public List<SupervisoresInfo> Supervisores;
-        public List<CalificacionCuestionariosPDSDTO>? pdsPorRango;
-        public List<ZonasPorSupervisorDTO> cuestionariosPendientesZona;
-        public List<ResumenGerencialZonasDTO> cuestionariosRevisadosPDSSupervisor;
+        public List<ZonasInfo> Zonas = new List<ZonasInfo>();
+        public List<SupervisoresInfo> Supervisores = new List<SupervisoresInfo>();
+        public List<CalificacionCuestionariosPDSDTO>? pdsPorRango = new List<CalificacionCuestionariosPDSDTO>();
+        public List<ZonasPorSupervisorDTO> cuestionariosPendientesZona = new List<ZonasPorSupervisorDTO>();
+        public List<ResumenGerencialZonasDTO> cuestionariosRevisadosPDSSupervisor = new List<ResumenGerencialZonasDTO>();
 
         private readonly IConfiguration _configuration;
         private string urlInjection = string.Empty;
+
+        public string codigoUsuario { get; set; }
 
         public StoreCheckService(IConfiguration configuration)
         {
@@ -155,6 +157,8 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
+                pdsPorRango = new List<CalificacionCuestionariosPDSDTO>();
+
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
                 RankingCumplimientoPDSDTO datoConsultar = new RankingCumplimientoPDSDTO();
                 datoConsultar.grupo = int.Parse(rangoCumplimientoPDS);
@@ -193,6 +197,8 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
+                cuestionariosPendientesZona = new List<ZonasPorSupervisorDTO>();
+
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(login);
                 //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
@@ -228,6 +234,8 @@ namespace IntranetLoteriaNacional.Data
         {
             try
             {
+                cuestionariosRevisadosPDSSupervisor = new List<ResumenGerencialZonasDTO>();
+                
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
                 //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
@@ -264,7 +272,7 @@ namespace IntranetLoteriaNacional.Data
             try
             {
                 //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/StoreCheck/";
-                
+
                 var jsonEnviar = JsonConvert.SerializeObject(dato);
                 //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
                 var apiCliente = new RestClient(urlInjection);
@@ -499,5 +507,75 @@ namespace IntranetLoteriaNacional.Data
             }
         }
 
+        #region Seguimiento
+        public List<ZonasPorSupervisorDTO> ObtienePendientesSupervisorPorZona()
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
+                //var jsonEnviar = JsonConvert.SerializeObject(dato);
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
+                var request = new RestRequest("ObtienePendientesSupervisorPorZona");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                //request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<ZonasPorSupervisorDTO[]>(returnType.Body)!;
+                        cuestionariosPendientesZona = ret.ToList();
+                    }
+                }
+
+
+                return cuestionariosPendientesZona;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        public List<ZonasPorSupervisorDTO> ObtienePendientesJefeComercialPorZona()
+        {
+            try
+            {
+                //EndPointStr = "http://jbg15pp03/APILoteriaNacional/api/" + EndPoints.obtieneZonasPorSupervisor;
+                //var jsonEnviar = JsonConvert.SerializeObject(dato);
+                //var apiCliente = new RestClient("http://jbg15pp03/APILoteriaNacional/api/StoreCheck/");
+                var apiCliente = new RestClient(urlInjection);
+                var request = new RestRequest("ObtienePendientesJefeComercialPorZona");
+                request.Method = Method.Post;
+                request.AddHeader("Accept", "application/json");
+                //request.AddParameter("application/json", jsonEnviar, ParameterType.RequestBody);
+                var response = apiCliente.Execute(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var rawResponse = response.Content;
+                    var jsonResult = JsonConvert.DeserializeObject(rawResponse).ToString();
+                    var returnType = JsonConvert.DeserializeObject<RespuestaDTO>(jsonResult);
+                    //pdsPorRango
+                    if (returnType is not null && returnType.CodigoError == 0 && returnType.Body != "[]")
+                    {
+                        var ret = JsonConvert.DeserializeObject<ZonasPorSupervisorDTO[]>(returnType.Body)!;
+                        cuestionariosPendientesZona = ret.ToList();
+                    }
+                }
+
+
+                return cuestionariosPendientesZona;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message.ToString());
+            }
+        }
+        #endregion
     }
 }

@@ -6,19 +6,12 @@
 <div class="top-row ps-3 navbar navbar-dark" style="background-color:white">
     <div class="container-fluid" style="background-color:white">
         <div style="padding: 20px; background-color: white;">
-            <img style="width: 150px" height="40px" src="./images/loterialogo.png" />
+            <img style="width: 150px" height="35px" src="./images/loterialogo.png" />
         </div>
-        <b/>
-        <b />
-        <b />
-        <b />
-        @* <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu" style="background-color:white">
-            <span class="navbar-toggler-icon" style="background-color:white"></span>
-        </button> *@
     </div>
 </div>
  
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu" style="background-color:white">
+@* <div class="@NavMenuCssClass" @onclick="ToggleNavMenu" style="background-color:white">
     @if(menuList==null)
     {
         <p><em>Cargando....</em></p>
@@ -26,7 +19,6 @@
     else
     {
         <ul class="nav flex-column" style="background-color:white; color:var(--ph-skyblue)">
-             
             @foreach(var funcion in funcionList)
             {
                 <li class="nav-item px-3" style="color:var(--ph-skyblue)">
@@ -45,7 +37,6 @@
                                 </NavLink>
                             </li>
                         }
-                        
                     }
                 </ul>
             }
@@ -53,6 +44,26 @@
         </ul>
     }
 </div>
+ *@
+<MudPaper Width="250px" Class="d-inline-flex py-3" Elevation="0">
+    <MudNavMenu style="background-color:white; color:var(--ph-skyblue)">
+        @if (funcionList != null && funcionList.Count > 0)
+        {
+            @foreach (var funcion in funcionList)
+            {
+                <MudNavGroup title="@funcion.nombreFuncion">
+                    @foreach (var transaccion in menuList.Where(t => t.codigoFuncion.Equals(funcion.codigoFuncion)).Select(t => new { t.codigoTransaccion, t.nombreTransaccion, t.urlPagina }).ToList())
+                    {
+                        <MudNavLink Href="@transaccion.urlPagina">@transaccion.nombreTransaccion</MudNavLink>
+                    }
+                </MudNavGroup>
+            }
+        }
+    </MudNavMenu>
+</MudPaper>
+
+
+
 
 @code {
     private bool collapseNavMenu = true;

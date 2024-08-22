@@ -14,6 +14,14 @@
 @using C1.Blazor.Chart
 @using C1.Blazor.DateTimeEditors
 @using C1.Blazor.Input
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
+@using BrowserInterop.Extensions
+@using System.Text.Json.Nodes
+@using BrowserInterop.Geolocation
+@using System.Text.Json.Nodes
+
+
 
 @inject ProjectHttpClient _httpClient
 @inject ILocalStorageService _session
@@ -21,6 +29,8 @@
 @inject SweetAlertService Swal
 @inject StoreCheckService StoreService
 @inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+
 
 <style>
     .column {
@@ -54,7 +64,7 @@
                     <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
                 </PhTableColumnValues>
                 <PhTableActions>
-                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
+                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
                 </PhTableActions>
             </PhTable>
             <PhModal @ref="modalCuestionarios">
@@ -81,7 +91,7 @@
                             <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
                         </PhTableColumnValues>
                         <PhTableActions>
-                            <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
                         </PhTableActions>
                     </PhTable>
                     <PhModal @ref="modalCuestionario" maxwidth="100%">
@@ -124,19 +134,39 @@
                                                     <tbody>
                                                         @if (preguntasList != null)
                                                         {
-                                                            foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                            @if (debeLimpiar == true)
                                                             {
-                                                                string nombreRadioButton = "radio" + count.ToString();
-                                                                <tr>
-                                                                    <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
-                                                                    <td width="4%">
-                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = true)" />
-                                                                    </td>
-                                                                    <td width="6%">
-                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = false)" />
-                                                                    </td>
-                                                                </tr>
-                                                                count++;
+                                                                foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                                {
+                                                                    string nombreRadioButton = "radio" + count.ToString();
+                                                                    <tr>
+                                                                        <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                        <td width="4%">
+                                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = false)" />
+                                                                        </td>
+                                                                        <td width="6%">
+                                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = false)" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    count++;
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                                {
+                                                                    string nombreRadioButton = "radio" + count.ToString();
+                                                                    <tr>
+                                                                        <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                        <td width="4%">
+                                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = true)" />
+                                                                        </td>
+                                                                        <td width="6%">
+                                                                            <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaJefeVentas = false)" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    count++;
+                                                                }
                                                             }
                                                         }
                                                     </tbody>
@@ -148,36 +178,48 @@
                             </ul>
                         </Body>
                         <Footer>
-                            <InputFile class="form-control" Id='foo' OnChange="SubirFoto" />
-                            <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
-                            <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            <MudFileUpload T="IBrowserFile" FilesChanged="SubirFotoNew" Accept=".png, .jpeg, .jpg">
+                                <ButtonTemplate>
+                                    <MudFab HtmlTag="label"
+                                            Color="Color.Secondary"
+                                            Icon="@Icons.Material.Filled.Image"
+                                            Label="Subir Foto"
+                                            for="@context.Id" />
+                                </ButtonTemplate>
+                            </MudFileUpload>
+                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
+                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                         </Footer>
                     </PhModal>
                 </Body>
                 <Footer>
-                    <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                 </Footer>
             </PhModal>
             <div class="row">
                 <div class="col-md-6 col-sm-12">
-                    <FlexChart Class="chart" ChartType="ChartType.Bar" Stacking="Stacking.None" SelectionMode="C1.Chart.ChartSelectionMode.Point"
-                               HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
-                               LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px"
+                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Bar" Stacking="Stacking.None" SelectionMode="C1.Chart.ChartSelectionMode.Point" 
+                               HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px" 
+                               LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px" 
                                BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSJefeComercial" >
                         <SeriesCollection>
                             <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
                         </SeriesCollection>
+                        <AxisCollection>
+                            <Axis AxisType="AxisType.X" Position="C1.Chart.Position.Bottom" MinorGrid="true" MinorTickMarks="TickMark.Cross" />
+                            <Axis AxisType="AxisType.Y" Position="C1.Chart.Position.Left" MinorGrid="true" MinorTickMarks="TickMark.Cross" />
+                        </AxisCollection>
                     </FlexChart>
                 </div>
                 <div class="col-md-6 col-sm-12">
-                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" LegendPosition="Position.None" LegendStyle="font-size:13px"
+                    <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Funnel" LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:13px"
                                BindingX="cantidadPDS" ItemsSource="dataRankingPDS"
                                HeaderContent="Ranking Cumplimiento PDS (últimos 30 días)" HeaderStyle="font-size:15px">
                         <SeriesCollection>
                             <Series Name="Actual" Binding="grupo"></Series>
                         </SeriesCollection>
                         <AxisCollection>
-                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None" />
+                            <Axis AxisType="C1.Chart.AxisType.Y" Position="C1.Chart.Position.None"  />
                             <Axis AxisType="C1.Chart.AxisType.X" Position="C1.Chart.Position.None" />
                         </AxisCollection>
                         <Label>
@@ -191,7 +233,7 @@
             </div>
             <div class="row">
                 <div class="col-md-6 col-sm-12" style="text-align: center">
-                    <PhButton Type="ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
+                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
                     <PhModal @ref="modalCuestionariosRevisados">
                         <Title>Cuestionarios Revisados</Title>
                         <Body>
@@ -205,7 +247,7 @@
                                     <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
                                 </div>
                                 <div class="col-sm-2">
-                                    <PhButton Type="ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
                                 </div>
                             </div>
                             <PhTable @ref="_tableRevisadosJefeComercial" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="ResumenGerencialZonasDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorJefeComercial" idTable="table_RevisadosPorSupervisor">
@@ -220,7 +262,7 @@
                                     <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
                                 </PhTableColumnValues>
                                 <PhTableActions>
-                                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
                                 </PhTableActions>
                             </PhTable>
                             <PhModal @ref="modalCuestionariosRevisadosxPDS">
@@ -246,31 +288,31 @@
                                             <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:20%;" />
                                         </PhTableColumnValues>
                                         <PhTableActions>
-                                            <PhButton Type="ButtonType.Primary" Size="ButtonSize.Small" @onclick="@(() => VerInforme(context))" Text="Ver Informe" />
+                                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" Size="ButtonSize.Small" @onclick="@(() => VerInforme(context))" Text="Ver Informe" />
                                         </PhTableActions>
                                     </PhTable>
                                     <PhModal @ref="modalInformeJefeVentas">
                                         <Title>Informe Supervisor</Title>
                                         <Body>
-                                            <iframe src="@PdfBase64" width="800" height="800" frameborder="0"></iframe>
+                                            <iframe src="@PdfBase64" style="width:800px;height:800px;" type="application/pdf"></iframe>
                                         </Body>
                                         <Footer>
-                                            <PhButton Type="ButtonType.Danger" @onclick="() => modalInformeJefeVentas.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalInformeJefeVentas.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                                         </Footer>
                                     </PhModal>
                                 </Body>
                                 <Footer>
-                                    <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                                 </Footer>
                             </PhModal>
                         </Body>
                         <Footer>
-                            <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                         </Footer>
                     </PhModal>
                 </div>
                 <div class="col-md-6 col-sm-12" style="text-align: center">
-                    <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                     <PhModal @ref="modalRankingxPDS">
                         <Title>Ranking de Cumplimento de PDS</Title>
                         <Body>
@@ -284,7 +326,7 @@
                                     <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
                                 </div>
                                 <div class="col-sm-2">
-                                    <PhButton Type="ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
                                 </div>
                             </div>
                             <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
@@ -297,7 +339,7 @@
                                     <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
                                 </PhTableColumnValues>
                                 <PhTableActions>
-                                    <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
                                 </PhTableActions>
                             </PhTable>
                             <PhModal @ref="modalPdsRango">
@@ -315,12 +357,12 @@
                                     </PhTable>
                                 </Body>
                                 <Footer>
-                                    <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                    <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                                 </Footer>
                             </PhModal>
                         </Body>
                         <Footer>
-                            <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                         </Footer>
                     </PhModal>
                 </div>
@@ -379,13 +421,26 @@
     string nombreArchivo = string.Empty;
     string archivoBase = string.Empty;
     private string PdfBase64;
+    string latitud = string.Empty;
+    string longitud = string.Empty;
+    string direccion = string.Empty;
+    string inicioRegistroJefeComercial = string.Empty;
+    string finRegistroJefeComercial = string.Empty;
+    private WindowNavigatorGeolocation geolocalizacion;
+    private GeolocationPosition posicionActual;
+    bool debeLimpiar = false;
+
 
     protected override async void OnInitialized()
     {
         EndPointStr = EndPoints.obtenerZonasPorJefeComercial;
+
         try
         {
-            strJefeComercial = await _session.GetItemAsync<string>("codigoUsuario");
+            strJefeComercial = StoreService.codigoUsuario; 
+
+
+            inicioRegistroJefeComercial = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -445,6 +500,7 @@
     private async Task CancelConfirm()
     {
         //this.OnInitialized();
+        debeLimpiar = true;
         StateHasChanged();
     }
     private async Task VerFormulario(FormulariosporPOSDTO formulario)
@@ -498,6 +554,73 @@
                 return;
             }
 
+            #region Geolocalizacion
+            var window = await JSRuntime.Window();
+            var navigator = await window.Navigator();
+            geolocalizacion = navigator.Geolocation;
+            posicionActual = (await geolocalizacion.GetCurrentPosition()).Location;
+
+            if (posicionActual == null)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+                        Icon = "error"
+                    });
+                return;
+            }
+            else
+            {
+                longitud = posicionActual.Coords.Longitude.ToString().Replace('.', ',');
+                latitud = posicionActual.Coords.Latitude.ToString().Replace('.', ',');
+
+                bool latitudContieneComa = latitud.Contains(",");
+                if (latitudContieneComa)
+                    latitud = latitud.Replace(',', '.');
+
+                bool longitudContieneComa = longitud.Contains(",");
+                if (longitudContieneComa)
+                    longitud = longitud.Replace(',', '.');
+
+                await EncontrarDireccionMaps(latitud, longitud);
+            }
+
+            #region Geolocalización con JavaScript
+            // var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
+
+            // if (result == null)
+            // {
+            //     await loader.Close();
+            //     await Swal.FireAsync(new SweetAlertOptions
+            //         {
+            //             ConfirmButtonColor = "var(--ph-skyblue)",
+            //             Title = "Intranet Lotería Nacional",
+            //             Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+            //             Icon = "error"
+            //         });
+            //     return;
+            // }
+
+            // longitud = result[0].ToString().Replace('.', ',');
+            // latitud = result[1].ToString().Replace('.', ',');
+
+            // bool latitudContieneComa = latitud.Contains(",");
+            // if (latitudContieneComa)
+            //     latitud = latitud.Replace(',', '.');
+
+            // bool longitudContieneComa = longitud.Contains(",");
+            // if (longitudContieneComa)
+            //     longitud = longitud.Replace(',', '.');
+
+            // await EncontrarDireccionMaps(latitud, longitud);
+
+            #endregion
+
+            #endregion
+
             //Valido que todas las preguntas tengan respuesta
             int preguntasSinRespuesta = 0;
             preguntasSinRespuesta = preguntasList.Where(pr => pr.respuestaJefeVentas == null).Count();
@@ -512,6 +635,7 @@
                         Text = "Todas las preguntas deben tener respuesta, por favor revise",
                         Icon = "error"
                     });
+                debeLimpiar = false;
                 return;
             }
 
@@ -534,16 +658,21 @@
                 datoEnviar.codigoJefeVentas = strJefeComercial;//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
                                                                //datoEnviar.presentaNovedad = item.presentaNovedad;
                                                                //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
-                datoEnviar.fechaRevisionJefeVentas = DateTime.Now.ToString("yyyy-MM-dd");
+                datoEnviar.inicioRegistroJefeComercial = inicioRegistroJefeComercial;
+                datoEnviar.finRegistroJefeComercial = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                datoEnviar.fechaRevisionJefeVentas = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
                 datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
-                datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
-                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt"));
+                datoEnviar.equipoModificacion = await _session.GetItemAsync<string>("equipoTransaccion");
+                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 registro.Add(datoEnviar);
             }
 
             listaEnviar.registro = registro;
             listaEnviar.evidenciaRevision = archivoBase;
+            listaEnviar.latitudEvidencia = latitud;
+            listaEnviar.longitudEvidencia = longitud;
+            listaEnviar.direccionEvidencia = direccion;
 
             var postRequest = new HttpRequestMessage(HttpMethod.Post, EndPoints.revisarCuestionarioJefeComercial)
                 {
@@ -570,6 +699,14 @@
                     cuestionariosRevisadosPDSJefeComercial = StoreService.ObtieneFormulariosRevisadosPDSPorJefeComercial(datoEnviar);
 
                     dataRankingPDS = StoreService.RecuperarRankingPDSJefeComercial(datoEnviar);
+
+                    //Refresco grid de cuestionarios
+                    ZonasPorSupervisorDTO datoPDS = new ZonasPorSupervisorDTO();
+                    datoPDS.codigoPDS = codigoPDS;
+                    datoPDS.nombrePDS = nombrePDS;
+                    await VerCuestionarios(datoPDS);
+
+                    debeLimpiar = true;
 
                     mensajeTransaccion = returnType.MensajeError;
                     iconoMostrar = "success";
@@ -835,4 +972,77 @@
             throw new Exception();
         }
     }
+    private async Task EncontrarDireccionMaps(string latitud, string longitud)
+    {
+        string MyMapsApiKey = Configuration.GetValue<string>("KeyGoogleMaps");
+
+        using (HttpClient cliente = new HttpClient())
+        {
+            string urlApi = string.Concat("https://maps.googleapis.com/maps/api/geocode/json?latlng=", latitud, ",", longitud, "&key=", MyMapsApiKey);
+
+            var response = cliente.GetAsync(urlApi).Result;
+
+            string json = await response.Content.ReadAsStringAsync();
+            var data = (JObject)JsonConvert.DeserializeObject(json);
+            direccion = data.SelectToken("results").ToList().FirstOrDefault().SelectToken("formatted_address").ToString();
+        }
+    }
+    private async Task VerRevisadosxPDSGrafico(EventArgs e)
+    {
+        
+    }
+
+    private async Task SubirFotoNew(IBrowserFile file)
+    {
+        mensajeTransaccion = string.Empty;
+        iconoMostrar = string.Empty;
+        try
+        {
+            if (file == null)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir una foto",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            if (file.Size > 104857600) // 100 MB en bytes
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Archivo excede el tamaño permitido, el máximo permitido es de 100 MB",
+                        Icon = "error"
+                    });
+                return;
+            }
+            using MemoryStream ms = new();
+            var resized = await file.RequestImageFileAsync(file.ContentType, maxWidth: 500, maxHeight: 800);
+            using Stream fileStream = resized.OpenReadStream();
+            await fileStream.CopyToAsync(ms);
+
+            archivoBase = $"{Convert.ToBase64String(ms.ToArray())}";
+            nombreArchivo = file.Name;
+
+
+        }
+        catch (HttpRequestException ex)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = ex.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
+
 }

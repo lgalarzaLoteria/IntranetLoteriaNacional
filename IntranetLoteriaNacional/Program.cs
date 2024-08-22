@@ -8,11 +8,15 @@ using Microsoft.AspNetCore.Http.Features;
 using IntranetLoteriaNacional.Shared.Constants;
 using CurrieTechnologies.Razor.SweetAlert2;
 using DevExpress.Blazor;
+using MudBlazor.Services;
+
 using static System.Configuration.ConfigurationManager;
 using Microsoft.Extensions.Configuration;
 using NuGet.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using C1.Blazor.Chart;
+using Microsoft.AspNetCore.Hosting;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +35,14 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddSweetAlert2();
 builder.Services.AddSingleton<StoreCheckService>();
 builder.Services.AddDevExpressBlazor(configure => configure.BootstrapVersion = BootstrapVersion.v5);
-//builder.Services.AddSignalR();
+builder.Services.AddMudServices();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue; // Para archivos grandes
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = int.MaxValue;
+});
 
 /***Servicio para peticiones livianas***/
 if (!builder.Services.Any(x => x.ServiceType == typeof(HttpClient)))
@@ -44,6 +55,15 @@ if (!builder.Services.Any(x => x.ServiceType == typeof(HttpClient)))
             BaseAddress = new Uri(_urlServicio)
         };
     });
+}
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddServerSideBlazor().AddCircuitOptions(x => x.DetailedErrors = true);
+}
+else
+{
+    builder.Services.AddServerSideBlazor();
 }
 
 builder.Services.AddScoped<ProjectHttpClient>();
@@ -64,7 +84,6 @@ builder.WebHost.UseStaticWebAssets();
 
 var app = builder.Build();
 
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -72,6 +91,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 
 app.UseHttpsRedirection();
 

@@ -18,6 +18,8 @@
 @using Microsoft.Extensions.Configuration;
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
+@using BrowserInterop.Extensions
+@using BrowserInterop.Geolocation
 
 
 @inject ProjectHttpClient _httpClient
@@ -27,6 +29,7 @@
 @inject StoreCheckService StoreService
 @inject IJSRuntime JSRuntime
 @inject IConfiguration Configuration
+
 
 
 <style>
@@ -60,7 +63,7 @@
                 <PhTableColumn Value="@Convert.ToString(context.CuestionariosPendientes)" Style="width:20%;" />
             </PhTableColumnValues>
             <PhTableActions>
-                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerCuestionarios(context))" Size="ButtonSize.Small" Text="Cuestionarios" />
             </PhTableActions>
         </PhTable>
         <PhModal @ref="modalCuestionarios">
@@ -74,10 +77,10 @@
                 </div>
                 <PhTable @ref="_table1" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="FormulariosporPOSDTO" Body="@pds" EndPoint="@EndPointCuestionarios"
                          SearchDefinition="@(new[]
-                         {
-                             "codigoFormulario",
-                             "fechaRegistro"
-                         })">
+                 {
+                     "codigoFormulario",
+                     "fechaRegistro"
+                 })">
                     <PhTableColumnHeaders>
                         <PhTableColumn Style="width:20%;" Value="Código de Cuestionario" IsHeader="true" />
                         <PhTableColumn Style="width:20%;" Value="Fecha Registro" IsHeader="true" />
@@ -87,7 +90,7 @@
                         <PhTableColumn Value="@context.fechaRegistro?.ToString()" Style="width:20%;" />
                     </PhTableColumnValues>
                     <PhTableActions>
-                        <PhButton Type="ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="@(() => VerFormulario(context))" Size="ButtonSize.Small" Text="Ver Cuestionario" />
                     </PhTableActions>
                 </PhTable>
                 <PhModal @ref="modalCuestionario" maxwidth="100%">
@@ -130,19 +133,39 @@
                                                 <tbody>
                                                     @if (preguntasList != null)
                                                     {
-                                                        foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                        @if (debeLimpiar == true)
                                                         {
-                                                            string nombreRadioButton = "radio" + count.ToString();
-                                                            <tr>
-                                                                <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
-                                                                <td width="4%">
-                                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = true)" />
-                                                                </td>
-                                                                <td width="6%">
-                                                                    <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = false)" />
-                                                                </td>
-                                                            </tr>
-                                                            count++;
+                                                            foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                            {
+                                                                string nombreRadioButton = "radio" + count.ToString();
+                                                                <tr>
+                                                                    <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                    <td width="4%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = false)" />
+                                                                    </td>
+                                                                    <td width="6%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = false)" />
+                                                                    </td>
+                                                                </tr>
+                                                                count++;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            foreach (var pregunta in preguntasList.Where(pl => pl.codigoSeccion == seccion.codigoSeccion))
+                                                            {
+                                                                string nombreRadioButton = "radio" + count.ToString();
+                                                                <tr>
+                                                                    <td scope="row" width="40%">@pregunta.descripcionPregunta.Trim()</td>
+                                                                    <td width="4%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = true)" />
+                                                                    </td>
+                                                                    <td width="6%">
+                                                                        <input type="radio" name="@nombreRadioButton" @onchange="@(() => pregunta.respuestaSupervisor = false)" />
+                                                                    </td>
+                                                                </tr>
+                                                                count++;
+                                                            }
                                                         }
                                                     }
                                                 </tbody>
@@ -152,24 +175,62 @@
                                 }
                             }
                         </ul>
+                        <PhModal @ref="modalEvidenciaTI" maxwidth="50%">
+                            <Title>Evidencia de TI</Title>
+                            <Body>
+                                <ul class="nav flex-column">
+                                    @if (elementosTIList != null)
+                                    {
+                                        int countElementosTI = 1;
+                                        string nombreSubirFoto = "foo" + countElementosTI.ToString();
+                                        @foreach (var elemento in elementosTIList)
+                                        {
+                                            <table class="table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td scope="row" width="40%">@elemento.nombreElementoIT.Trim()</td>
+                                                        <td scope="row" width="40%">
+                                                            <InputFile class="form-control" Id=nombreSubirFoto OnChange="(args => SubirFotoTI(args, elemento))" />
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        }
+                                    }
+                                </ul>
+                            </Body>
+                            <Footer>
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalEvidenciaTI.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                            </Footer>
+                        </PhModal>
                     </Body>
                     <Footer>
-                        <InputFile class="form-control" Id='foo' OnChange="SubirFoto" />
-                        <PhButton Type="ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true" />
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <MudFileUpload T="IBrowserFile" FilesChanged="SubirFotoNew" Accept=".png, .jpeg, .jpg">
+                            <ButtonTemplate>
+                                <MudFab HtmlTag="label"
+                                        Color="Color.Secondary"
+                                        Icon="@Icons.Material.Filled.Image"
+                                        Label="Subir Foto"
+                                        for="@context.Id" />
+                            </ButtonTemplate>
+                        </MudFileUpload>
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="@(() => VerElementosTI())" Size="ButtonSize.Small" Text="Evidencia TI" isConfirmation="false" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Success" @onclick="sendData" Size="ButtonSize.Small" Text="Guardar" isConfirmation="true"  />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionario.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
             </Body>
             <Footer>
-                <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionarios.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
             </Footer>
         </PhModal>
+
         <div class="row">
             <div class="col-md-6 col-sm-12">
-                <FlexChart Class="chart" ChartType="ChartType.Bar" Stacking="Stacking.None" SelectionMode= "C1.Chart.ChartSelectionMode.Point"
+                <FlexChart Class="chart" ChartType="C1.Chart.ChartType.Bar" Stacking="Stacking.None" SelectionMode="C1.Chart.ChartSelectionMode.Point"
                            HeaderContent="Cuestionarios Revisados (últimos 30 días)" HeaderStyle="font-size:15px"
                            LegendPosition="C1.Chart.Position.None" LegendStyle="font-size:15px"
-                           BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor" >
+                           BindingX="nombrePDS" ItemsSource="@cuestionariosRevisadosPDSSupervisor">
                     <SeriesCollection>
                         <Series Name="Cuestionarios Revisados" Binding="CuestionariosNovedades" />
                     </SeriesCollection>
@@ -191,13 +252,14 @@
                 </FlexChart>
             </div>
         </div>
+
         <div class="row">
             <div class="col-md-6 col-sm-12" style="text-align: center">
-                <PhButton Type="ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
-                <PhModal @ref="modalCuestionariosRevisados">
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRevisados" Size="ButtonSize.Medium" Text="Ver Revisados" />
+                <PhModal @ref="modalCuestionariosRevisados" maxheight="100%">
                     <Title>Cuestionarios Revisados</Title>
                     <Body>
-                        <div class="form-group row" >
+                        <div class="form-group row">
                             <label for="det" class="col-sm-2 col-form-label">Fecha desde</label>
                             <div class="col-sm-2">
                                 <input type="date" class="form-control rounded" id="fechaDesde" @bind-value="@fechaDesde" pattern="\d{4}/\d{2}/\d{2}" />
@@ -207,7 +269,7 @@
                                 <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
                             </div>
                             <div class="col-sm-2">
-                                <PhButton Type="ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRevisadosxFecha" Size="ButtonSize.Medium" Text="Consultar" />
                             </div>
                         </div>
                         <PhTable @ref="_tableRevisadosSupervisor" TPost="RegistroFormularioDTO" isSearcheable="false" isAgroup="true" TReturn="ResumenGerencialZonasDTO" Body="@pds" EndPoint="@EndPointObtieneRevisadosPorSupervisor" idTable="table_RevisadosPorSupervisor">
@@ -222,10 +284,10 @@
                                 <PhTableColumn Value="@Convert.ToString(context.CuestionariosNovedades)" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
-                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerRevisadosxPDS(context))" Size="ButtonSize.Small" Text="Ver Cuestionarios" />
                             </PhTableActions>
                         </PhTable>
-                        <PhModal @ref="modalCuestionariosRevisadosxPDS">
+                        <PhModal @ref="modalCuestionariosRevisadosxPDS" maxwidth="100%" maxheight="100%">
                             <Title>Cuestionarios Revisados PDS: @nombrePDSRevisado</Title>
                             <Body>
                                 <div class="form-group row" style="margin-bottom:2%;">
@@ -248,31 +310,31 @@
                                         <PhTableColumn Value="@Convert.ToString(context.porcentajeCumplimiento)" Style="width:20%;" />
                                     </PhTableColumnValues>
                                     <PhTableActions>
-                                        <PhButton Type="ButtonType.Primary" @onclick="@(() => VerInforme(context))" Size="ButtonSize.Small" Text="Ver Informe" />
+                                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerInforme(context))" Size="ButtonSize.Small" Text="Ver Informe" />
                                     </PhTableActions>
                                 </PhTable>
-                                <PhModal @ref="modalInformeSupervisor">
+                                <PhModal @ref="modalInformeSupervisor" maxwidth="100%" maxheight="100%">
                                     <Title>Informe Supervisor</Title>
                                     <Body>
-                                        <iframe src="@PdfBase64" width="800" height="800" frameborder="0"></iframe>
+                                        <iframe src="@PdfBase64" style="width:800px;height:800px;" type="application/pdf"></iframe>
                                     </Body>
                                     <Footer>
-                                        <PhButton Type="ButtonType.Danger" @onclick="() => modalInformeSupervisor.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalInformeSupervisor.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                                     </Footer>
                                 </PhModal>
                             </Body>
                             <Footer>
-                                <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionariosRevisadosxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                             </Footer>
                         </PhModal>
                     </Body>
                     <Footer>
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalCuestionariosRevisados.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
             </div>
             <div class="col-md-6 col-sm-12" style="text-align: center">
-                <PhButton Type="ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
+                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRanking" Size="ButtonSize.Medium" Text="Ver Ranking" />
                 <PhModal @ref="modalRankingxPDS">
                     <Title>Ranking de Cumplimento de PDS</Title>
                     <Body>
@@ -286,7 +348,7 @@
                                 <input type="date" class="form-control rounded" id="fechaHasta" @bind-value="@fechaHasta" pattern="\d{4}/\d{2}/\d{2}" />
                             </div>
                             <div class="col-sm-2">
-                                <PhButton Type="ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" OnClick="VerRankingxFecha" Size="ButtonSize.Medium" Text="Consultar" />
                             </div>
                         </div>
                         <PhTable @ref="_tableRankingPDS" TPost="RegistroFormularioDTO" isSearcheable="false" TReturn="RankingCumplimientoPDSDTO" Body="@rankingPDS" EndPoint="@EndPointObtieneRankingPDS" idTable="table_RankingPDS">
@@ -299,7 +361,7 @@
                                 <PhTableColumn Value="@Convert.ToString(context.cantidadPDS)" Style="width:20%;" />
                             </PhTableColumnValues>
                             <PhTableActions>
-                                <PhButton Type="ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Primary" @onclick="@(() => VerRankingxGrupo(context))" Size="ButtonSize.Small" Text="Ver PDS" />
                             </PhTableActions>
                         </PhTable>
                         <PhModal @ref="modalPdsRango">
@@ -317,16 +379,18 @@
                                 </PhTable>
                             </Body>
                             <Footer>
-                                <PhButton Type="ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                                <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalPdsRango.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                             </Footer>
                         </PhModal>
                     </Body>
                     <Footer>
-                        <PhButton Type="ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
+                        <PhButton Type="IntranetLoteriaNacional.Shared.Buttons.Enums.ButtonType.Danger" @onclick="() => modalRankingxPDS.CloseModal()" Size="ButtonSize.Small" Text="Cerrar" />
                     </Footer>
                 </PhModal>
             </div>
         </div>
+        
+        
     </div>
     <div>
         <PhConfirmacion @ref="modalConfirmacion" onClickCancel="CancelConfirm" title="Confirmación" content="¿Está seguro de guardar el cuestionario?" OnClickExec="sendData">
@@ -364,6 +428,7 @@
     private PhModal? modalCuestionario { get; set; } = new();
     private PhModal? modalPdsRango { get; set; } = new();
     private PhModal? modalInformeSupervisor { get; set; } = new();
+    private PhModal? modalEvidenciaTI { get; set; } = new();
     private int codigoPDS { get; set; } = 0;
     private string nombrePDS { get; set; } = string.Empty;
     private string nombrePDSRevisado { get; set; } = string.Empty;
@@ -371,10 +436,12 @@
     IEnumerable<SeccionesDTO> DataSeccion;
     public IEnumerable<RegistroFormularioDTO> preguntasList;
     public IEnumerable<NovedadesDTO> novedadesList;
+    public IEnumerable<ElementosTIDTO> elementosTIList;
     string mensajeTransaccion = string.Empty;
     string iconoMostrar = string.Empty;
     NovedadesDTO novedades = new NovedadesDTO();
     NovedadesDTO dtSelectnovedad = null;
+    ElementosTIDTO elementosTI = new ElementosTIDTO();
     public List<ZonasPorSupervisorDTO>? cuestionariosPendientesZona;
     List<ResumenGerencialZonasDTO>? cuestionariosRevisadosPDSSupervisor;
     List<RankingCumplimientoPDSInfo> dataRankingPDS;
@@ -390,6 +457,13 @@
     string latitud = string.Empty;
     string longitud = string.Empty;
     string direccion = string.Empty;
+    string inicioRegistroSupervisor = string.Empty;
+    string finRegistroSupervisor = string.Empty;
+    private WindowNavigatorGeolocation geolocalizacion;
+    private GeolocationPosition posicionActual;
+    List<RevisionElementosTIDTO> revisionEvidencia = new List<RevisionElementosTIDTO>();
+    RegistroElementosDTO lstRevisionElementosTI = new RegistroElementosDTO();
+    bool debeLimpiar = false;
 
 
     protected override async void OnInitialized()
@@ -398,7 +472,9 @@
 
         try
         {
-            strSupervisor = await _session.GetItemAsync<string>("codigoUsuario");
+            strSupervisor = StoreService.codigoUsuario;
+
+            inicioRegistroSupervisor = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
             fechaDesde = DateTime.Today.AddDays(-30);
             fechaHasta = DateTime.Today;
@@ -409,7 +485,7 @@
             login.UserName = strSupervisor;
             login.Password = string.Empty;
 
-            //await _session.GetItemAsync<string>("codigoUsuario");
+            // await _session.GetItemAsync<string>("codigoUsuario");
             // var result = await _httpClient.PostAsJsonAsync<ZonasPorSupervisorDTO>
             //    (EndPointStr, login);
 
@@ -422,10 +498,24 @@
             dataRankingPDS = StoreService.RecuperarRankingPDSSupervisor(datoEnviar);
 
 
-            novedadesList = await _httpClient.PostAsJsonAsync<NovedadesDTO>(EndPoints.obtenerNovedades, novedades);
-            if (novedadesList == null)
+            // novedadesList = await _httpClient.PostAsJsonAsync<NovedadesDTO>(EndPoints.obtenerNovedades, novedades);
+            // if (novedadesList == null)
+            // {
+            //     mensajeTransaccion = "No existen novedades registradas, por favor comuníquese con el administrador";
+            //     await loader.Close();
+            //     await Swal.FireAsync(new SweetAlertOptions
+            //         {
+            //             ConfirmButtonColor = "var(--ph-skyblue)",
+            //             Title = "Intranet Lotería Nacional",
+            //             Text = mensajeTransaccion,
+            //             Icon = "info"
+            //         });
+            // }
+
+            elementosTIList = await _httpClient.PostAsJsonAsync<ElementosTIDTO>(EndPoints.listarElementosTI, elementosTI);
+            if (elementosTIList == null)
             {
-                mensajeTransaccion = "No existen novedades registradas, por favor comuníquese con el administrador";
+                mensajeTransaccion = "No existen elementos de TI registrados, por favor comuníquese con el administrador";
                 await loader.Close();
                 await Swal.FireAsync(new SweetAlertOptions
                     {
@@ -453,18 +543,7 @@
             }
 
             await loader.Close();
-            var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
-            longitud = result[0].ToString().Replace('.', ',');
-            latitud = result[1].ToString().Replace('.', ',');
 
-            bool latitudContieneComa = latitud.Contains(",");
-            if (latitudContieneComa)
-                latitud = latitud.Replace(',', '.');
-
-            bool longitudContieneComa = longitud.Contains(",");
-            if (longitudContieneComa)
-                longitud = longitud.Replace(',', '.');
-            await EncontrarDireccionMaps(latitud.ToString(), longitud.ToString());
 
         }
 
@@ -491,6 +570,99 @@
                 return;
             }
 
+            if (lstRevisionElementosTI.registro==null)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir la(s) foto(s) como evidencia de TI",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            if(lstRevisionElementosTI.registro.Count==0)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir la(s) foto(s) como evidencia de TI",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            #region Geolocalizacion
+            var window = await JSRuntime.Window();
+            var navigator = await window.Navigator();
+            geolocalizacion = navigator.Geolocation;
+            posicionActual = (await geolocalizacion.GetCurrentPosition()).Location;
+
+            if (posicionActual == null)
+            {
+                await loader.Close();
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+                        Icon = "error"
+                    });
+                return;
+            }
+            else
+            {
+                longitud = posicionActual.Coords.Longitude.ToString().Replace('.', ',');
+                latitud = posicionActual.Coords.Latitude.ToString().Replace('.', ',');
+
+                bool latitudContieneComa = latitud.Contains(",");
+                if (latitudContieneComa)
+                    latitud = latitud.Replace(',', '.');
+
+                bool longitudContieneComa = longitud.Contains(",");
+                if (longitudContieneComa)
+                    longitud = longitud.Replace(',', '.');
+
+                await EncontrarDireccionMaps(latitud, longitud);
+            }
+
+            #region Geolocalización JavaScript
+            // var result = await JSRuntime.InvokeAsync<JsonArray>("getCoords");
+
+            // if (result == null)
+            // {
+            //     await loader.Close();
+            //     await Swal.FireAsync(new SweetAlertOptions
+            //         {
+            //             ConfirmButtonColor = "var(--ph-skyblue)",
+            //             Title = "Intranet Lotería Nacional",
+            //             Text = "Por favor active la geolocalización del navegador en el dispositivo, es necesario para el uso de la aplicación",
+            //             Icon = "error"
+            //         });
+            //     return;
+            // }
+
+            // longitud = result[0].ToString().Replace('.', ',');
+            // latitud = result[1].ToString().Replace('.', ',');
+
+            // bool latitudContieneComa = latitud.Contains(",");
+            // if (latitudContieneComa)
+            //     latitud = latitud.Replace(',', '.');
+
+            // bool longitudContieneComa = longitud.Contains(",");
+            // if (longitudContieneComa)
+            //     longitud = longitud.Replace(',', '.');
+
+            // await EncontrarDireccionMaps(latitud, longitud);
+            #endregion
+
+
+            #endregion
+
             //Valido que todas las preguntas tengan respuesta
             int preguntasSinRespuesta = 0;
             preguntasSinRespuesta = preguntasList.Where(pr => pr.respuestaSupervisor == null).Count();
@@ -505,6 +677,7 @@
                         Text = "Todas las preguntas deben tener respuesta, por favor revise",
                         Icon = "error"
                     });
+                debeLimpiar = false;
                 return;
             }
 
@@ -527,10 +700,12 @@
                 datoEnviar.codigoSupervisor = strSupervisor;//await _session.GetItemAsync<string>("codigoUsuario"); deber ir codigo numerico del supervisor
                                                             //datoEnviar.presentaNovedad = item.presentaNovedad;
                                                             //datoEnviar.codigoNovedad = item.codigoNovedad; //Aquí debo coger el código de novedad del combo
-                datoEnviar.fechaRevisionSupervisor = DateTime.Now.ToString("yyyy-MM-dd");
+                datoEnviar.inicioRegistroSupervisor = inicioRegistroSupervisor;
+                datoEnviar.finRegistroSupervisor = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                datoEnviar.fechaRevisionSupervisor = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
                 datoEnviar.usuarioModificacion = await _session.GetItemAsync<string>("codigoUsuario");
-                datoEnviar.equipoModificacion = "192.168.3.216";//await _session.GetItemAsync<string>("ip");
-                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd h:mm tt"));
+                datoEnviar.equipoModificacion = await _session.GetItemAsync<string>("equipoTransaccion");
+                datoEnviar.fechaModificacion = System.Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 registro.Add(datoEnviar);
             }
@@ -552,23 +727,55 @@
                 var returnType = await postResponse.Content.ReadFromJsonAsync<RespuestaDTO>()!;
                 if (returnType.CodigoError == 0)
                 {
-                    await _table1!.GetDataAsync();
-                    await _table!.GetDataAsync();
-                    RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
-                    datoEnviar.codigoSupervisor = strSupervisor;
-                    login = new LoginDTO();
-                    login.UserName = strSupervisor;
-                    login.Password = string.Empty;
+                    var postRequest1 = new HttpRequestMessage(HttpMethod.Post, EndPoints.grabarEvidenciaTI)
+                        {
+                            Content = JsonContent.Create(lstRevisionElementosTI)
+                        };
+                    var postResponse1 = await _httpClient.SendAsync(postRequest1);
 
-                    cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonas(login);
+                    if (postResponse1.IsSuccessStatusCode)
+                    {
+                        var returnType1 = await postResponse1.Content.ReadFromJsonAsync<RespuestaDTO>()!;
+                        if (returnType1.CodigoError == 0)
+                        {
+                            await _table1!.GetDataAsync();
+                            await _table!.GetDataAsync();
 
-                    cuestionariosRevisadosPDSSupervisor = StoreService.ObtieneFormulariosRevisadosPDSPorSupervisor(datoEnviar);
+                            RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
+                            datoEnviar.codigoSupervisor = strSupervisor;
+                            login = new LoginDTO();
+                            login.UserName = strSupervisor;
+                            login.Password = string.Empty;
 
-                    dataRankingPDS = StoreService.RecuperarRankingPDSSupervisor(datoEnviar);
+                            cuestionariosPendientesZona = StoreService.RecuperarDataCuestionariosPendientesZonas(login);
 
+                            cuestionariosRevisadosPDSSupervisor = StoreService.ObtieneFormulariosRevisadosPDSPorSupervisor(datoEnviar);
 
-                    mensajeTransaccion = returnType.MensajeError;
-                    iconoMostrar = "success";
+                            dataRankingPDS = StoreService.RecuperarRankingPDSSupervisor(datoEnviar);
+
+                            //Refresco grid de cuestionarios
+                            ZonasPorSupervisorDTO datoPDS = new ZonasPorSupervisorDTO();
+                            datoPDS.codigoPDS = codigoPDS;
+                            datoPDS.nombrePDS = nombrePDS;
+                            await VerCuestionarios(datoPDS);
+
+                            debeLimpiar = true;
+
+                            mensajeTransaccion = returnType.MensajeError;
+                            iconoMostrar = "success";
+                        }
+                        else
+
+                        {
+                            mensajeTransaccion = returnType.MensajeError;
+                            iconoMostrar = "error";
+                        }
+                    }
+                    else
+                    {
+                        mensajeTransaccion = returnType.MensajeError;
+                        iconoMostrar = "error";
+                    }
                 }
                 else
                 {
@@ -631,6 +838,7 @@
     private async Task CancelConfirm()
     {
         //this.OnInitialized();
+        debeLimpiar = true;
         StateHasChanged();
     }
     private async Task VerFormulario(FormulariosporPOSDTO formulario)
@@ -726,7 +934,7 @@
 
             RegistroFormularioDTO datoEnviar = new RegistroFormularioDTO();
             datoEnviar.codigoPDS = datoPDS.codigoPDS;
-            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd"); 
+            datoEnviar.fechaRegistro = Convert.ToDateTime(fechaDesde).ToString("yyyy-MM-dd");
             datoEnviar.fechaRevisionSupervisor = Convert.ToDateTime(fechaHasta).ToString("yyyy-MM-dd");
 
             EndPointObtieneRevisadosPorPDS = EndPoints.obtenerCalificacioCustionariosporPDS;
@@ -845,6 +1053,20 @@
             }
             IBrowserFile imgFile = e.File;
 
+            if (imgFile.Size > 104857600) // 100 MB en bytes
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Archivo excede el tamaño permitido, el máximo permitido es de 100 MB",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+
+
             nombreArchivo = imgFile.Name;
 
             var buffers = new byte[imgFile.Size];
@@ -876,8 +1098,8 @@
             dtoEnviar.codigoFormulario = long.Parse(formulario.codigoFormulario.ToString());
             dtoEnviar.fechaRegistro = string.Empty;
             string archivoBase64 = StoreService.ObtenerInformeSupervisor(dtoEnviar);
-            byte[] arregloArchivo = Convert.FromBase64String(archivoBase64);
-            var base64String = Convert.ToBase64String(arregloArchivo);
+            // byte[] arregloArchivo = Convert.FromBase64String(archivoBase64);
+            // var base64String = Convert.ToBase64String(arregloArchivo);
             PdfBase64 = $"data:application/pdf;base64,{archivoBase64}";
 
             await modalInformeSupervisor.NewModal();
@@ -902,5 +1124,132 @@
             direccion = data.SelectToken("results").ToList().FirstOrDefault().SelectToken("formatted_address").ToString();
         }
     }
+    private async Task VerElementosTI()
+    {
+        await modalEvidenciaTI.NewModal();
+    }
+    private async Task SubirFotoTI(InputFileChangeEventArgs e,ElementosTIDTO dato)
+    {
+        try
+        {
+            if (e.File == null)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir una foto",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            if (e.File.Size > 104857600) // 100 MB en bytes
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Archivo excede el tamaño permitido, el máximo permitido es de 100 MB",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+
+
+            IBrowserFile imgFile = e.File;
+
+            using MemoryStream ms = new();
+            var resized = await imgFile.RequestImageFileAsync(imgFile.ContentType, maxWidth: 500, maxHeight: 800);
+            using Stream fileStream = resized.OpenReadStream();
+            await fileStream.CopyToAsync(ms);
+
+            var archivoEnviar = $"{Convert.ToBase64String(ms.ToArray())}";
+             
+
+            RevisionElementosTIDTO evidenciaTISubir = new RevisionElementosTIDTO();
+            evidenciaTISubir.codigoFormulario = codigoFormulario;
+            evidenciaTISubir.codigoElementoIT = dato.codigoElementoIT;
+            evidenciaTISubir.evidenciaElementoIT = archivoEnviar;
+            evidenciaTISubir.fechaEvidenciaIT = DateTime.Now.ToString("yyyy-MM-dd");
+            evidenciaTISubir.usuarioTransaccion = await _session.GetItemAsync<string>("codigoUsuario");
+            evidenciaTISubir.equipoTransaccion = await _session.GetItemAsync<string>("equipoTransaccion");
+
+            revisionEvidencia.Add(evidenciaTISubir);
+            lstRevisionElementosTI.registro = revisionEvidencia;
+
+
+        }
+        catch (HttpRequestException ex)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            await loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = ex.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
+
+    private async Task SubirFotoNew(IBrowserFile file)
+    {
+        mensajeTransaccion = string.Empty;
+        iconoMostrar = string.Empty;
+        try
+        {
+            if(file == null)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Debe subir una foto",
+                        Icon = "error"
+                    });
+                return;
+            }
+
+            if (file.Size > 104857600) // 100 MB en bytes
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        ConfirmButtonColor = "var(--ph-skyblue)",
+                        Title = "Intranet Lotería Nacional",
+                        Text = "Archivo excede el tamaño permitido, el máximo permitido es de 100 MB",
+                        Icon = "error"
+                    });
+                return;
+            }
+            using MemoryStream ms = new();
+            var resized = await file.RequestImageFileAsync(file.ContentType, maxWidth: 500, maxHeight: 800);
+            using Stream fileStream = resized.OpenReadStream();
+            await fileStream.CopyToAsync(ms);
+
+            archivoBase = $"{Convert.ToBase64String(ms.ToArray())}";
+            nombreArchivo = file.Name;
+
+
+        }
+        catch (HttpRequestException ex)
+        {
+            //await modalNotification.ErrorModal(e.Message.ToString());
+            loader.Close();
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    ConfirmButtonColor = "var(--ph-skyblue)",
+                    Title = "Intranet Lotería Nacional",
+                    Text = ex.Message.ToString(),
+                    Icon = "error"
+                });
+        }
+    }
 
 }
+
+    
+
+
